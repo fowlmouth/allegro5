@@ -377,11 +377,17 @@ type
   TColor* = object{.pure.}
     r*,g*,b*,a*: cfloat
 
+{.pragma: importAL, importc: "al_$1".}
 {.push dynlib: LIB_NAME, callconv: cdecl.}
-{.push importc: "al_$1".}
+
+
+# conflicts with KEY_DOWN, so this is al_key_down (aliased as is_key_down())
+proc al_key_down* (state: var TKeyboardState; keycode: cint): bool {.importc.}
 
 # system.h
-proc install_system* (version: cint, atExitPTR: proc: cint{.cdecl.}): bool {.discardable.}
+proc install_system* (version: cint, atExitPTR: proc: cint{.cdecl.}): bool {.importAL, discardable.}
+
+{.push importc: "al_$1".}
 
 # display.h
 proc create_display* (w, h: cint): PDisplay 
@@ -462,7 +468,6 @@ proc set_keyboard_leds* (leds: cint): bool
 proc keycode_to_name* (keycode: cint): cstring
 
 proc get_keyboard_state* (result: var TKeyboardState)
-proc key_down* (state: var TKeyboardState; keycode: cint): bool
 
 proc get_keyboard_event_source* : PEventSource
   
