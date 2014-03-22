@@ -1,9 +1,13 @@
 when defined(Linux):
   const
-    LIB_NAME = "liballegro.so"
+    dll_image = "liballegro_image.so.5.0.10"
+    dll_main = "liballegro.so.5.0.10"
+    dll_font = "liballegro_font.so.5.0.10"
+    dll_ttf = "liballegro_ttf.so.5.0.10"
+    dll_primitives = "liballegro_primitives.so.5.0.10"
 elif defined(Windows):
   const
-    LIB_NAME = "allegro-5.0.10-mt.dll"
+    dll_main = "allegro-5.0.10-mt.dll"
 
 const
   VERSION = 5
@@ -370,24 +374,135 @@ type
      keyboard*: TKeyboardEvent
    else:
      nil
-  
-  
+
+ PEventQueue* = ptr object
+
+# altime.h
+type TTimeout* = object
+  pad: array[2,uint64]
+
+# bitmap.h
+type
+  TBitmapFlag* {.size:sizeof(cint).} = enum
+    ALLEGRO_MEMORY_BITMAP            = 0x0001,
+    ALLEGRO_KEEP_BITMAP_FORMAT       = 0x0002,
+    ALLEGRO_FORCE_LOCKING            = 0x0004,
+    ALLEGRO_NO_PRESERVE_TEXTURE      = 0x0008,
+    ALLEGRO_ALPHA_TEST               = 0x0010,
+    ALLEGRO_INTERNAL_OPENGL          = 0x0020,
+    ALLEGRO_MIN_LINEAR               = 0x0040,
+    ALLEGRO_MAG_LINEAR               = 0x0080,
+    ALLEGRO_MIPMAP                   = 0x0100,
+    ALLEGRO_NO_PREMULTIPLIED_ALPHA   = 0x0200,
+    ALLEGRO_VIDEO_BITMAP             = 0x0400
+
 #color.h
 type
   TColor* = object{.pure.}
     r*,g*,b*,a*: cfloat
 
-{.pragma: importAL, importc: "al_$1".}
-{.push dynlib: LIB_NAME, callconv: cdecl.}
+# file.h
+type PFile* = ptr object
 
+# transformations.h
+type TTransform* = object
+  m*: array[4, array[4, cfloat]]
+
+# utf8.h
+type  
+  UStr* = ptr object
+
+# allegro_font.h
+type
+  PFont* = ptr object
+  TFontLoader* = proc(filename:cstring, size,flags:cint): PFont
+const
+  FontAlignLeft* = 0.cint
+  FontAlignCenter* = 1.cint
+  FontAlignRight* = 2.cint
+  FontAlignInteger* = 4.cint
+
+# allegro_ttf.h
+const
+  TTF_NoKerning* = 1.cint
+  TTF_Monochrome* = 2.cint
+  TTF_NoAutohint* = 4.cint
+
+{.pragma: importAL, importc: "al_$1".}
+{.push callconv: cdecl.}
+{.push dynlib: dllMain.}
 
 # conflicts with KEY_DOWN, so this is al_key_down (aliased as is_key_down())
 proc al_key_down* (state: var TKeyboardState; keycode: cint): bool {.importc.}
-
+proc emit_user_event* (
+    source: PEventSource; 
+    event: ptr TEvent; 
+    destructor: proc(userEvent: ptr TUserEvent){.cdecl.} ):bool{.importAL.}
 # system.h
 proc install_system* (version: cint, atExitPTR: proc: cint{.cdecl.}): bool {.importAL, discardable.}
 
 {.push importc: "al_$1".}
+
+# bitmap.h
+proc set_new_bitmap_format*(format:cint)
+proc set_new_bitmap_flags*(flags:cint)
+proc get_new_bitmap_format*:cint
+proc get_new_bitmap_flags*:cint
+proc add_new_bitmap_flag*(flag:TBitmapFlag)
+
+proc get_bitmap_width* (bitmap:PBitmap): cint
+proc get_bitmap_height* (bitmap:PBitmap): cint
+proc get_bitmap_format* (bitmap:PBitmap): cint
+proc get_bitmap_flags* (bitmap:PBitmap): cint
+
+proc create_bitmap*(w,h: cint): PBitmap
+proc destroy_bitmap* (bitmap:PBitmap)
+
+proc put_pixel* (x,y:cint, color:TColor)
+proc put_blended_pixel*(x,y:cint, color:TColor)
+proc get_pixel* (bitmap:PBitmap, x,y:cint):TColor
+
+proc convert_mask_to_alpha*(bitmap:PBitmap, maskColor: TColor)
+
+proc set_clipping_rectangle* (x,y,w,h:cint) 
+proc reset_clipping_rectangle*
+proc get_clipping_rectangle* (x,y,w,h:var cint)
+
+proc create_sub_bitmap* (parent:PBitmap; x,y,w,h:cint): PBitmap
+proc is_sub_bitmap*(bitmap:PBitmap): bool
+proc get_parent_bitmap*(bitmap:PBitmap):PBitmap
+
+proc clone_bitmap*(bitmap:PBitmap):PBitmap
+
+# bitmap_io.h
+{.pop.}
+#typedef ALLEGRO_BITMAP *(*ALLEGRO_IIO_LOADER_FUNCTION)(const char *filename);
+type IIO_LoaderFunction* = proc(filename: cstring): PBitmap {.cdecl.}
+#typedef ALLEGRO_BITMAP *(*ALLEGRO_IIO_FS_LOADER_FUNCTION)(ALLEGRO_FILE *fp);
+type IIO_FS_LoaderFunction* = proc (fp: al.PFile): PBitmap {.cdecl.}
+#typedef bool (*ALLEGRO_IIO_SAVER_FUNCTION)(const char *filename, ALLEGRO_BITMAP *bitmap);
+type IIO_SaverFunction* = proc(filename:cstring, bitmap:PBitmap): bool{.cdecl.}
+#typedef bool (*ALLEGRO_IIO_FS_SAVER_FUNCTION)(ALLEGRO_FILE *fp, ALLEGRO_BITMAP *bitmap);
+
+{.push importc:"al_$1".}
+proc register_bitmap_loader*(ext:cstring, f:IIOLoaderFunction):bool
+proc register_bitmap_saver*(ext:cstring, f:IIOSaverFunction):bool
+
+discard """
+AL_FUNC(bool, al_register_bitmap_loader, (const char *ext, ALLEGRO_IIO_LOADER_FUNCTION loader));
+AL_FUNC(bool, al_register_bitmap_saver, (const char *ext, ALLEGRO_IIO_SAVER_FUNCTION saver));
+"""
+
+
+discard """AL_FUNC(bool, al_register_bitmap_loader_f, (const char *ext, ALLEGRO_IIO_FS_LOADER_FUNCTION fs_loader));
+AL_FUNC(bool, al_register_bitmap_saver_f, (const char *ext, ALLEGRO_IIO_FS_SAVER_FUNCTION fs_saver));
+AL_FUNC(ALLEGRO_BITMAP *, al_load_bitmap, (const char *filename));
+AL_FUNC(ALLEGRO_BITMAP *, al_load_bitmap_f, (ALLEGRO_FILE *fp, const char *ident));
+AL_FUNC(bool, al_save_bitmap, (const char *filename, ALLEGRO_BITMAP *bitmap));
+AL_FUNC(bool, al_save_bitmap_f, (ALLEGRO_FILE *fp, const char *ident, ALLEGRO_BITMAP *bitmap));
+"""
+proc load_bitmap* (filename:cstring): PBitmap
+proc save_bitmap* (filename:string,bitmap:PBitmap): bool
 
 # display.h
 proc create_display* (w, h: cint): PDisplay 
@@ -459,6 +574,30 @@ proc clear_to_color* (color: TColor)
 proc map_rgb* (r,g,b: uint8): TColor 
 
 
+# events.h
+proc init_user_event_source* (source: PEventSource)
+proc destroy_user_event_source*(source:PEventSource)
+#emit_user_event
+
+proc unref_user_event* (userEvent:ptr TUserEvent)
+proc set_event_source_data* (src:PEventSource; data:pointer)
+proc get_event_source_data* (src:PEventSource): pointer
+
+proc create_event_queue* : PEventQueue
+proc destroy_event_queue* (Q:PEventQueue)
+proc register_event_source*(Q:PEventQueue; src:PEventSource)
+proc is_event_queue_empty*(Q:PEventQueue): bool
+proc get_next_event*(Q:PEventQueue; result:var TEvent): bool
+proc peek_next_event*(Q:PEventQueue; result:var TEvent):bool
+proc drop_next_event*(Q:PEventQueue):bool
+proc flush_event_queue*(Q:PEventQueue)
+proc wait_for_event*(Q:PEventQueue; result:var TEvent)
+
+proc wait_for_event_timed*(Q:PEventQueue; result:var TEvent; secs:cfloat): bool
+proc wait_for_event_until*(Q:PEventQueue; result:var TEvent; timeout:var TTimeout):bool
+
+
+
 # keyboard.h
 proc is_keyboard_installed*:bool
 proc install_keyboard*: bool
@@ -470,54 +609,227 @@ proc keycode_to_name* (keycode: cint): cstring
 proc get_keyboard_state* (result: var TKeyboardState)
 
 proc get_keyboard_event_source* : PEventSource
-  
+
+# mouse.h
+proc is_mouse_installed* : bool
+proc install_mouse*: bool
+proc uninstall_mouse*:void
+proc get_mouse_num_buttons* : cint #cuint
+proc get_mouse_num_axes*: cint #cuint
+proc set_mouse_xy * (D:PDisplay; x,y:cint): bool
+proc set_mouse_z* (z: cint): bool
+proc set_mouse_w* (w: cint): bool
+proc set_mouse_axis*(axis,value: cint): bool
+proc get_mouse_state*(state:var TMouseState):void
+proc mouse_button_down*(state:var TMouseState; button:cint): bool
+proc get_mouse_state_axis*(state:var TMouseState;axis:cint): cint
+proc get_mouse_cursor_position*(resultX,resultY: var cint):bool
+proc grab_mouse*(D:PDisplay):bool
+proc ungrab_mouse*: bool
+
+proc get_mouse_event_source* : PEventSource
 
 # joystick.h
-proc install_joystick* : bool 
+proc install_joystick* : bool {.discardable.}
 proc uninstall_joystick* 
 proc is_joystick_installed*: bool
 proc reconfigure_joysticks*: bool
 
+proc get_num_joysticks* : cint 
+proc get_joystick* (id: cint): PJoystick
+proc release_joystick* (J:PJoystick) 
+proc get_joystick_active* (J:PJoystick): bool
+proc get_joystick_name* (J:PJoystick): cstring
+
+proc get_joystick_num_sticks* (J:PJoystick): cint
+proc get_joystick_stick_flags*(J:PJoystick; stick:cint): cint
+proc get_joystick_stick_name* (J:PJoystick; stick:cint): cstring
+
+proc get_joystick_num_axes* (J:PJoystick; stick:cint): cint
+proc get_joystick_axis_name*(J:PJoystick; stick,axis:cint):cstring
+
+proc get_joystick_num_buttons*(J:PJoystick):cint
+proc get_joystick_button_name*(J:PJoystick; button:cint): cint
+
+proc get_joystick_state* (J:PJoystick; result:var TJoystickState)
+
+proc get_joystick_event_source* : PEventSource
+
+# transformations.h
 discard """
-
-AL_FUNC(int,            al_get_num_joysticks,   (void));
-AL_FUNC(ALLEGRO_JOYSTICK *, al_get_joystick,    (int joyn));
-AL_FUNC(void,           al_release_joystick,    (ALLEGRO_JOYSTICK *));
-AL_FUNC(bool,           al_get_joystick_active, (ALLEGRO_JOYSTICK *));
-AL_FUNC(const char*,    al_get_joystick_name,   (ALLEGRO_JOYSTICK *));
-
-AL_FUNC(int,            al_get_joystick_num_sticks, (ALLEGRO_JOYSTICK *));
-AL_FUNC(int, al_get_joystick_stick_flags, (ALLEGRO_JOYSTICK *, int stick)); /* junk? */
-AL_FUNC(const char*,    al_get_joystick_stick_name, (ALLEGRO_JOYSTICK *, int stick));
-
-AL_FUNC(int,            al_get_joystick_num_axes,   (ALLEGRO_JOYSTICK *, int stick));
-AL_FUNC(const char*,    al_get_joystick_axis_name,  (ALLEGRO_JOYSTICK *, int stick, int axis));
-
-AL_FUNC(int,            al_get_joystick_num_buttons,  (ALLEGRO_JOYSTICK *));
-AL_FUNC(const char*,    al_get_joystick_button_name,  (ALLEGRO_JOYSTICK *, int buttonn));
-
-AL_FUNC(void,           al_get_joystick_state,  (ALLEGRO_JOYSTICK *, ALLEGRO_JOYSTICK_STATE *ret_state));
-
-AL_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_joystick_event_source, (void));
+/* Transformations*/
+AL_FUNC(void, al_use_transform, (const ALLEGRO_TRANSFORM* trans));
+AL_FUNC(void, al_copy_transform, (ALLEGRO_TRANSFORM* dest, const ALLEGRO_TRANSFORM* src));
+AL_FUNC(void, al_identity_transform, (ALLEGRO_TRANSFORM* trans));
+AL_FUNC(void, al_build_transform, (ALLEGRO_TRANSFORM* trans, float x, float y, float sx, float sy, float theta));
+AL_FUNC(void, al_translate_transform, (ALLEGRO_TRANSFORM* trans, float x, float y));
+AL_FUNC(void, al_rotate_transform, (ALLEGRO_TRANSFORM* trans, float theta));
+AL_FUNC(void, al_scale_transform, (ALLEGRO_TRANSFORM* trans, float sx, float sy));
+AL_FUNC(void, al_transform_coordinates, (const ALLEGRO_TRANSFORM* trans, float* x, float* y));
+AL_FUNC(void, al_compose_transform, (ALLEGRO_TRANSFORM* trans, const ALLEGRO_TRANSFORM* other));
+AL_FUNC(const ALLEGRO_TRANSFORM*, al_get_current_transform, (void));
+AL_FUNC(void, al_invert_transform, (ALLEGRO_TRANSFORM *trans));
+AL_FUNC(int, al_check_inverse, (const ALLEGRO_TRANSFORM *trans, float tol));
 """
 
+# timer.h
+proc create_timer* (seconds: cdouble) : PTimer
+proc destroy_timer*(T:PTimer)
+proc start_timer* (T:PTimer)
+discard """
+AL_FUNC(void, al_stop_timer, (ALLEGRO_TIMER *timer));
+AL_FUNC(bool, al_get_timer_started, (const ALLEGRO_TIMER *timer));
+AL_FUNC(double, al_get_timer_speed, (const ALLEGRO_TIMER *timer));
+AL_FUNC(void, al_set_timer_speed, (ALLEGRO_TIMER *timer, double speed_secs));
+AL_FUNC(int64_t, al_get_timer_count, (const ALLEGRO_TIMER *timer));
+AL_FUNC(void, al_set_timer_count, (ALLEGRO_TIMER *timer, int64_t count));
+AL_FUNC(void, al_add_timer_count, (ALLEGRO_TIMER *timer, int64_t diff));
+"""
+proc get_timer_event_source*(T:PTimer):PEventSource
 
 # altime.h
-proc rest* (seconds: cdouble)  
+proc get_time* : cdouble
+proc rest* (seconds: cdouble)
+proc init_timeout* (timeout: ptr TTimeout; seconds: cdouble)  
+
 {.pop.}
 {.pop.}
 
-proc init* (): bool {.discardable.} =
-  proc atexit : cint {.importc, header: "stdlib.h", cdecl.}
-  install_system(VERSION_INT, atexit)
+# allegro_image.h
+{.push importc: "al_$1", dynlib: dllImage.} 
+proc init_image_addon* :bool
+proc shutdown_image_addon*: void
+proc get_allegro_image_version*: uint32
 
+{.pop.}
+
+# allegro_font.h
+{.push importc:"al_$1",dynlib: dllFont.}
+
+proc register_font_loader* (ext:cstring; loader: TFontLoader): bool
+
+  
+proc load_bitmap_font* (filename:cstring): PFont
+proc load_font* (filename:cstring; size,flags:cint): PFont
+
+proc grab_font_from_bitmap* (bmp:PBitmap; num: cint, ranges: ptr array[int.high, cint])
+proc create_builtin_font* : PFont
+
+proc draw_ustr* (font:PFont; color:TColor; x, y: cfloat, flags: cint, ustr: USTR): void
+proc draw_text* (font:PFont; color:TColor; x,y:cfloat; flags:cint; text:cstring): void
+proc draw_justified_text* (font:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; text:cstring): void
+proc draw_justified_ustr* (font:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; text:USTR): void
+
+discard """
+ALLEGRO_FONT_PRINTFUNC(void, al_draw_textf, (const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, char const *format, ...), 6, 7);
+ALLEGRO_FONT_PRINTFUNC(void, al_draw_justified_textf, (const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x1, float x2, float y, float diff, int flags, char const *format, ...), 8, 9);
+ALLEGRO_FONT_FUNC(int, al_get_text_width, (const ALLEGRO_FONT *f, const char *str));
+ALLEGRO_FONT_FUNC(int, al_get_ustr_width, (const ALLEGRO_FONT *f, const ALLEGRO_USTR *ustr));
+ALLEGRO_FONT_FUNC(int, al_get_font_line_height, (const ALLEGRO_FONT *f));
+ALLEGRO_FONT_FUNC(int, al_get_font_ascent, (const ALLEGRO_FONT *f));
+ALLEGRO_FONT_FUNC(int, al_get_font_descent, (const ALLEGRO_FONT *f));
+ALLEGRO_FONT_FUNC(void, al_destroy_font, (ALLEGRO_FONT *f));
+ALLEGRO_FONT_FUNC(void, al_get_ustr_dimensions, (const ALLEGRO_FONT *f,
+   ALLEGRO_USTR const *text,
+   int *bbx, int *bby, int *bbw, int *bbh));
+ALLEGRO_FONT_FUNC(void, al_get_text_dimensions, (const ALLEGRO_FONT *f,
+   char const *text,
+   int *bbx, int *bby, int *bbw, int *bbh));
+"""
+
+proc init_font_addon*:bool
+proc shutdown_font_addon*:void
+proc get_allegro_font_version*:uint32
+{.pop.}
+
+# allegro_ttf.h
+{.push importc:"al_$1",dynlib:dllTTF.}
+proc load_ttf_font* (filename:cstring; size,flags:cint): PFont
+proc load_ttf_font_f*(file:PFile; filename:cstring; size,flags:cint): PFont
+proc load_ttf_font_stretch*(filename:cstring; w,h,flags:cint): PFont
+proc load_ttf_font_stretch_f* (file:PFile; filename:cstring; w,h,flags:cint): PFont
+proc init_ttf_addon*:bool
+proc shutdown_ttf_addon*:void
+proc get_allegro_ttf_version*:uint32
+{.pop.}
+
+# allegro_primitives.h
+
+{.push importc:"al_$1",dynlib:dllPrimitives.}
+proc init_primitives_addon*:bool
+proc shutdown_primitives_addon*:void
+
+{.pop.}
+
+{.pop.}
+
+## aliases
+
+
+proc init* (timeout: var TTimeout; seconds: cdouble) {.inline.} =
+  init_timeout(timeout.addr, seconds)
 
 discard """ proc isNil* (D: PDisplay): bool {.borrow.}
  """
 proc destroy* (some: PDisplay) {.inline.} =
   some.destroy_display
+proc destroy* (Q:PEventQueue) {.inline.} =
+  q.destroy_eventqueue
+
+proc is_key_down* (state: var TKeyboardState; keycode: cint): bool {.inline.} =
+  al_key_down(state, keycode)
+
+proc eventSource* (D:PDisplay): PEventSource {.inline.} = 
+  D.getDisplayEventSource
+
+proc start*(T:PTimer){.inline.}=T.startTimer
+proc eventSource*(T:PTimer):PEventSource{.inline.}=T.getTimerEventSource
+
+proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=Q.registerEventSource(SRC)
+
+## higher level helper functions
+
+proc init* (): bool {.discardable.} =
+  proc atexit : cint {.importc, header: "stdlib.h", cdecl.}
+  install_system(VERSION_INT, atexit)
+
+template pushTarget* (B:PBitmap; body:stmt):stmt =
+  let old = getTargetBitmap()
+  setTargetBitmap(B)
+  body
+  setTargetBitmap(old)
 
 
+import os
+
+proc findFile (f: string; dirs: seq[string]): string =
+  block foo:
+    for d in dirs:
+      for file in walkFiles(d/f):
+        result = file #d / file
+        break foo
+
+proc systemFontDirectories* : seq[string] =
+  when defined(Linux):
+    result = @[ "/usr/share/fonts/TTF" ]
+  elif defined(Windows):
+    result = @[ "/Windows/Fonts" ]  
+  else:
+    result = @[ "/Libraries/Fonts" ]
+  
+proc systemFont* (f: string, size: cint; flags = 0.cint): PFont =
+  let f = find_file(f, systemFontDirectories())
+  if not f.isNil:
+    result = loadFont(f, size,flags)
+
+proc initBaseAddons* : bool =
+  template i (f): stmt =
+    if not f(): result = false
+  result = true
+  i initImageAddon
+  i initFontAddon
+  i initTTFAddon
+  i initPrimitivesAddon
 
 when isMainModule:
   
@@ -528,8 +840,46 @@ when isMainModule:
   if display.isNil:
     quit "Failed to create display!"
   
+  let timer = createTimer(1.0/60.0)
+  
+  let queue = createEventQueue()
+  discard al.installKeyboard()
+  discard al.installMouse()
+  discard initBaseAddons()
+  
+  let font = systemFont("VeraMono.ttf", 46)
+  
+  #queue.register display.getEventSource
+  queue.registerEventSource display.EventSource
+  queue.registerEventSource timer.eventSource
+  queue.registerEventSource getMouseEventSource()
+  queue.register getKeyboardEventSource()
+  
+  timer.start
+  
   al.clearToColor(al.mapRGB(0,0,0))
   al.flipDisplay()
-  al.rest(2.0)
+  
+  var ev: TEvent
+  while true:
+    queue.waitForEvent ev
+    
+    case ev.kind
+    of eventTimer:
+      # draw
+      pushTarget(display.getBackbuffer):
+        clearToColor(mapRGB(0,0,0))
+        
+        font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
+        
+        flipDisplay()
+    
+    of eventDisplayClose:
+      break
+    
+    else:
+      echo "Unhandled event ", ev.kind
+  
+  queue.destroy
   al.destroy(display)
 
