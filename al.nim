@@ -395,8 +395,11 @@ type
     ALLEGRO_MIPMAP                   = 0x0100,
     ALLEGRO_NO_PREMULTIPLIED_ALPHA   = 0x0200,
     ALLEGRO_VIDEO_BITMAP             = 0x0400
-
-#color.h
+# bitmap_draw.h
+const
+  FlipHorizontal* = cint(1 shl 0)
+  FlipVertical* = cint(1 shl 1) 
+# color.h
 type
   TColor* = object{.pure.}
     r*,g*,b*,a*: cfloat
@@ -427,6 +430,13 @@ const
   TTF_NoKerning* = 1.cint
   TTF_Monochrome* = 2.cint
   TTF_NoAutohint* = 4.cint
+
+# allegro_primitives.h
+type
+  TPrimitiveType* {.size:sizeof(cint).} = enum
+    LineList, LineStrip, LineLoop, TriangleList, TriangleStrip, TriangleFan,
+    PointList
+
 
 {.pragma: importAL, importc: "al_$1".}
 {.push callconv: cdecl.}
@@ -473,6 +483,26 @@ proc is_sub_bitmap*(bitmap:PBitmap): bool
 proc get_parent_bitmap*(bitmap:PBitmap):PBitmap
 
 proc clone_bitmap*(bitmap:PBitmap):PBitmap
+
+# bitmap_draw.h
+proc draw_bitmap* (bmp:PBitmap; dx,dy:cfloat; flags:cint)
+proc draw_bitmap_region*(bmp:PBitmap; sx,sy,sw,sh, dx,dy: cfloat; flags:cint)
+proc draw_scaled_bitmap*(bmp:PBitmap; sx,sy,sw,sh, dx,dy,dw,dh:cfloat; flags:cint)
+proc draw_rotated_bitmap*(bmp:PBitmap; cx,cy, dx,dy, angle: cfloat; flags:cint)
+proc draw_scaled_rotated_bitmap*(bmp:PBitmap; cx,cy,dx,dy,xscale,yscale,angle:cfloat; flags:cint)
+
+proc draw_tinted_bitmap* (bmp:PBitmap; tint:TColor; dx,dy:cfloat; flags:cint)
+proc draw_tinted_bitmap_region*(bmp:PBitmap; tint:TColor; 
+    sx,sy,sw,sh, dx,dy: cfloat; flags:cint)
+proc draw_tinted_scaled_bitmap* (bmp:PBitmap; tint:TColor;
+    sx,sy,sw,sh, dx,dy,dw,dh:cfloat; flags:cint)
+proc draw_tinted_rotated_bitmap*(bmp:PBitmap;tint:TColor;
+    cx,cy,dx,dy,angle:cfloat; flags:cint)
+proc draw_tinted_scaled_rotated_bitmap*(bmp:PBitmap; tint:TColor;
+    cx,cy,dx,dy,xscale,yscale,angle:cfloat; flags:cint)
+proc draw_tinted_scaled_rotated_bitmap_region*(bmp:PBitmap;
+    sx,sy,sw,sh:cfloat; tint:TColor;
+    cx,cy,dx,dy,xscale,yscale,angle:cfloat; flags:cint)
 
 # bitmap_io.h
 {.pop.}
@@ -571,7 +601,18 @@ proc clear_to_color* (color: TColor)
 
 
 # color.h
-proc map_rgb* (r,g,b: uint8): TColor 
+proc map_rgb* (r,g,b: uint8): TColor
+proc map_rgba*(r,g,b,a:uint8):TColor
+proc map_rgb_f*(r,g,b:cfloat):TColor
+proc map_rgba_f*(r,g,b,a:cfloat):TColor
+
+proc unmap_rgb*(color:TColor; r,g,b:var uint8)
+proc unmap_rgba*(color:TColor; r,g,b,a:var uint8)
+proc unmap_rgb_f*(color:TColor; r,g,b:var cfloat)
+proc unmap_rgba_f*(color:TColor; r,g,b,a:var cfloat)
+
+proc get_pixel_size*(format:cint):cint
+proc get_pixel_format_bits*(format:cint):cint 
 
 
 # events.h
@@ -754,10 +795,54 @@ proc get_allegro_ttf_version*:uint32
 {.pop.}
 
 # allegro_primitives.h
-
+type
+ PVertexDecl* = ptr object 
+ TVertexElement* = object
+  attribute*,storage*,offset*: cint
+ TVertex* = object
+  x*,y*,z*, u*,v*: cfloat
+  color*:TColor
 {.push importc:"al_$1",dynlib:dllPrimitives.}
+proc get_allegro_primitives_version*: uint32
 proc init_primitives_addon*:bool
 proc shutdown_primitives_addon*:void
+proc draw_prim* (vertices: pointer; decl: PVertexDecl; texture:PBitmap; start,fin,kind:cint): cint
+proc draw_indexed_prim*(vertices:pointer; decl:PVertexDecl; 
+  texture:PBitmap; indices:pointer; numVertices, kind: cint ): cint
+
+proc create_vertex_decl* (elements:ptr TVertexElement; stride:cint): PVertexDecl
+proc destroy_vertex_decl*(decl:PVertexDecl): void
+
+#proc draw_soft_triangle* (v1,v2,v3: ptr TVertex; state: pointer; 
+
+
+proc draw_line* (x1,y1,x2,y2:cfloat; color:TColor; thickness:cfloat)
+proc draw_triangle*(x1,y1,x2,y2,x3,y3:cfloat; color:TColor; thickness:cfloat)
+proc draw_rectangle*(x1,y1,x2,y2:cfloat; color:TColor; thickness:cfloat)
+proc draw_rounded_rectangle*(x1,y1,x2,y2,rx,ry: cfloat; color:TColor; thickness:cfloat)
+
+proc calculate_arc* (dest:var cfloat; stride:cint; cx,cy,rx,ry,startTheta,deltaTheta,thickness:cfloat; numSegments:cint)
+proc draw_circle* (cx,cy,r:cfloat; color:TColor; thickness:cfloat)
+proc draw_ellipse*(cx,cy,rx,ry:cfloat; color:TColor; thickness:cfloat)
+proc draw_arc* (cx,cy,r,startTheta,deltaTheta:cfloat; color:TColor; thickness:cfloat)
+proc draw_elliptical_arc* (cx,cy,rx,ry,startTheta,deltaTheta:cfloat; color:TColor; thickness:cfloat)
+proc draw_pieslice*(cx,cy,r,startTheta,deltaTheta:cfloat; color:TColor; thickness:cfloat)
+
+proc calculate_spline* (dest:var cfloat; stride:cint; points:array[8,cfloat]; thickness:cfloat; numSegments:cint) 
+proc draw_spline* (points:array[8,cfloat]; color:TColor; thickness:cfloat)
+
+proc calculate_ribbon*(
+    dest:var cfloat; destStride:cint; points:ptr cfloat; pointsStride:cint,
+    thickness:cfloat; numSegments:cint)
+proc draw_ribbon* (points:ptr cfloat; pointsStride:cint; color:TColor; thickness:cfloat; numSegments:cint)
+
+proc draw_filled_triangle* (x1,y1,x2,y2,x3,y3:cfloat; color:TColor)
+proc draw_filled_rectangle* (x1,y1,x2,y2:cfloat; color:TColor)
+proc draw_filled_ellipse* (cx,cy,rx,ry:cfloat; color:TColor)
+proc draw_filled_circle* (cx,cy,r:cfloat; color:TColor)
+proc draw_filled_pieslice* (cx,cy,r,startTheta,deltaTheta:cfloat; color:TColor)
+proc draw_filled_rounded_rectangle* (x1,y1,x2,y2,rx,ry:cfloat; color:TColor)
+   
 
 {.pop.}
 
