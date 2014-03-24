@@ -1,0 +1,10 @@
+[Package]
+name:"allegro5"
+version:"1.0"
+author:"fowl"
+description:"Wrapper for Allegro version 5."
+license:"MIT"
+srcDir:"src"
+[Deps]
+requires:"nimrod >= 0.9.3"
+
