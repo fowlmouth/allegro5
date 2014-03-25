@@ -555,46 +555,38 @@ proc set_window_position* (D:PDisplay; x,y: cint)
 proc get_window_position(D:PDisplay; x,y: var cint) 
 proc set_window_title* (D:PDisplay; title:cstring) 
 
-discard """
-AL_FUNC(void, al_set_new_display_refresh_rate, (int refresh_rate));
-AL_FUNC(void, al_set_new_display_flags, (int flags));
-AL_FUNC(int,  al_get_new_display_refresh_rate, (void));
-AL_FUNC(int,  al_get_new_display_flags, (void));
+proc set_new_display_refresh_rate* (refreshRate:cint) 
+proc set_new_display_flags* (flags:cint)
+proc get_new_display_refresh_rate* : cint
+proc get_new_display_flags* : cint
 
-AL_FUNC(int, al_get_display_width,  (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_height, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_format, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_refresh_rate, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_flags,  (ALLEGRO_DISPLAY *display));
-AL_FUNC(bool, al_set_display_flag, (ALLEGRO_DISPLAY *display, int flag, bool onoff));
-AL_FUNC(bool, al_toggle_display_flag, (ALLEGRO_DISPLAY *display, int flag, bool onoff));
+proc get_display_width* (D:PDisplay):cint
+proc get_display_height*(D:PDisplay):cint
+proc get_display_format*(D:PDisplay):cint
+proc get_display_refresh_rate*(D:PDisplay):cint
+proc get_display_flags*(D:PDisplay):cint
+proc set_display_flag* (D:PDisplay; flag:cint; state:bool):bool
+proc toggle_display_flag*(D:PDisplay; flag:cint; state:bool):bool
 
+proc acknowledge_resize* (D:PDisplay): bool
+proc update_display_region*(x,y,w,h:cint)
+proc is_compatible_bitmap*(B:PBitmap): bool
 
-AL_FUNC(bool, al_acknowledge_resize, (ALLEGRO_DISPLAY *display));
-AL_FUNC(void, al_update_display_region, (int x, int y, int width, int height));
-AL_FUNC(bool, al_is_compatible_bitmap, (ALLEGRO_BITMAP *bitmap));
+proc set_display_icon* (D:PDisplay; icon:PBitmap)
+proc set_display_icons*(D:PDisplay; num:cint; bmps:ptr PBitmap)
 
-AL_FUNC(void, al_set_display_icon, (ALLEGRO_DISPLAY *display, ALLEGRO_BITMAP *icon));
-AL_FUNC(void, al_set_display_icons, (ALLEGRO_DISPLAY *display, int num_icons, ALLEGRO_BITMAP *icons[]));
+proc get_new_display_adapter* : cint
+proc set_new_display_adapter* (adapter:cint)
+proc set_new_window_position* (x,y:cint)
+proc get_new_window_position* (x,y:var cint)
 
-/* Stuff for multihead/window management */
-AL_FUNC(int, al_get_new_display_adapter, (void));
-AL_FUNC(void, al_set_new_display_adapter, (int adapter));
-AL_FUNC(void, al_set_new_window_position, (int x, int y));
-AL_FUNC(void, al_get_new_window_position, (int *x, int *y));
+proc set_new_display_option*(option,value,importance:cint)
+proc get_new_display_option*(option:cint; importance:var cint):cint
+proc reset_new_display_options()
+proc get_display_option*(D:PDisplay; option:cint):cint
 
-/* Defined in display_settings.c */
-AL_FUNC(void, al_set_new_display_option, (int option, int value, int importance));
-AL_FUNC(int, al_get_new_display_option, (int option, int *importance));
-AL_FUNC(void, al_reset_new_display_options, (void));
-AL_FUNC(int, al_get_display_option, (ALLEGRO_DISPLAY *display, int option));
-
-/*Deferred drawing*/
-AL_FUNC(void, al_hold_bitmap_drawing, (bool hold));
-AL_FUNC(bool, al_is_bitmap_drawing_held, (void));
-
-"""
-
+proc hold_bitmap_drawing*(hold:bool)
+proc is_bitmap_drawing_help*:bool
 
 # drawing.h
 proc clear_to_color* (color: TColor)  
@@ -697,35 +689,30 @@ proc get_joystick_state* (J:PJoystick; result:var TJoystickState)
 proc get_joystick_event_source* : PEventSource
 
 # transformations.h
-discard """
-/* Transformations*/
-AL_FUNC(void, al_use_transform, (const ALLEGRO_TRANSFORM* trans));
-AL_FUNC(void, al_copy_transform, (ALLEGRO_TRANSFORM* dest, const ALLEGRO_TRANSFORM* src));
-AL_FUNC(void, al_identity_transform, (ALLEGRO_TRANSFORM* trans));
-AL_FUNC(void, al_build_transform, (ALLEGRO_TRANSFORM* trans, float x, float y, float sx, float sy, float theta));
-AL_FUNC(void, al_translate_transform, (ALLEGRO_TRANSFORM* trans, float x, float y));
-AL_FUNC(void, al_rotate_transform, (ALLEGRO_TRANSFORM* trans, float theta));
-AL_FUNC(void, al_scale_transform, (ALLEGRO_TRANSFORM* trans, float sx, float sy));
-AL_FUNC(void, al_transform_coordinates, (const ALLEGRO_TRANSFORM* trans, float* x, float* y));
-AL_FUNC(void, al_compose_transform, (ALLEGRO_TRANSFORM* trans, const ALLEGRO_TRANSFORM* other));
-AL_FUNC(const ALLEGRO_TRANSFORM*, al_get_current_transform, (void));
-AL_FUNC(void, al_invert_transform, (ALLEGRO_TRANSFORM *trans));
-AL_FUNC(int, al_check_inverse, (const ALLEGRO_TRANSFORM *trans, float tol));
-"""
+proc use_transform* (trans:PTransform)
+proc copy_transform*(dest, src:PTransform)
+proc identity_transform*(trans:PTransform)
+proc build_transform* (trans:PTransform; x,y,sw,sy,theta:cfloat)
+proc translate_transform*(trans:PTransform; x,y:cfloat)
+proc rotate_transform*(trans:PTransform; theta:cfloat)
+proc scale_transform*(trans:PTransform; sx,sy:cfloat)
+proc transform_coordinates* (tran:PTransform; x,y:var cfloat)
+proc compose_transform* (trans,other:PTransform)
+proc get_current_transform* : PTransform
+proc invert_transform* (trans:PTransform)
+proc check_inverse* (trans:PTransform; tol:cfloat): cint
 
 # timer.h
 proc create_timer* (seconds: cdouble) : PTimer
 proc destroy_timer*(T:PTimer)
 proc start_timer* (T:PTimer)
-discard """
-AL_FUNC(void, al_stop_timer, (ALLEGRO_TIMER *timer));
-AL_FUNC(bool, al_get_timer_started, (const ALLEGRO_TIMER *timer));
-AL_FUNC(double, al_get_timer_speed, (const ALLEGRO_TIMER *timer));
-AL_FUNC(void, al_set_timer_speed, (ALLEGRO_TIMER *timer, double speed_secs));
-AL_FUNC(int64_t, al_get_timer_count, (const ALLEGRO_TIMER *timer));
-AL_FUNC(void, al_set_timer_count, (ALLEGRO_TIMER *timer, int64_t count));
-AL_FUNC(void, al_add_timer_count, (ALLEGRO_TIMER *timer, int64_t diff));
-"""
+proc stop_timer* (T:PTimer)
+proc get_timer_started* (T:PTimer): bool
+proc get_timer_speed* (T:PTimer): cdouble
+proc set_timer_speed* (T:PTimer; seconds: cdouble)
+proc get_timer_count* (T:PTimer): int64
+proc set_timer_count* (T:PTimer; count:int64)
+proc add_timer_count* (T:PTimer; diff:int64)
 proc get_timer_event_source*(T:PTimer):PEventSource
 
 # altime.h
@@ -860,6 +847,20 @@ proc destroy* (some: PDisplay) {.inline.} =
   some.destroy_display
 proc destroy* (Q:PEventQueue) {.inline.} =
   q.destroy_eventqueue
+proc destroy* (B:PBitmap) {.inline.}=
+  b.destroyBitmap
+
+proc get_size* (D:PDisplay): tuple[w,h:cint] =
+  result.w = d.get_display_width
+  result.h = d.get_display_height
+
+proc get_width* (B:PBitmap):cint {.inline.} =
+  b.getBitmapWidth
+proc get_height*(B:PBitmap):cint{.inline.}=
+ b.getBitmapHeight
+proc get_size* (B:PBitmap): tuple[w,h: cint] {.inline.} =
+  (b.getWidth, b.getHeight)
+
 
 proc is_key_down* (state: var TKeyboardState; keycode: cint): bool {.inline.} =
   al_key_down(state, keycode)
