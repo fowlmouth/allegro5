@@ -425,6 +425,26 @@ type
 # file.h
 type PFile* = ptr object
 
+# fullscreen_mode.h
+type
+  PDisplayMode* = ptr TDisplayMode
+  TDisplayMode* = object
+    width*,height*,format*,refreshRate*:cint
+
+# monitor.h
+type TMonitorInfo* = object
+  x1*,y1*,x2*,y2*:cint
+
+# mouse_cursor.h
+type PMouseCursor* = ptr object
+type TSystemMouseCursor* {.size:sizeof(cint).} = enum
+  SysCursorNone, SysCursorDefault, SysCursorArrow, SysCursorBusy,
+  SysCursorQuestion, SysCursorEdit, SysCursorMove, SysCursorResizeN,
+  SysCursorResizeW, SysCursorResizeS, SysCursorResizeE,
+  SysCursorResizeNW,SysCursorResizeSW,SysCursorResizeSE,
+  SysCursorResizeNE, SysCursorProgress, SysCursorPrecision,
+  SysCursorLink, SysCursorAltSelect, SysCursorUnavailable
+
 # transformations.h
 type 
  PTransform* = var TTransform
@@ -567,6 +587,25 @@ proc get_blender* (op,source,dest:var cint)
 proc set_separate_blender* (op,source,dest,alphaOp,alphaSource,alphaDest:cint)
 proc get_separate_blender* (op,source,dest,alphaOp,alphaSource,alphaDest:var cint)
 
+# color.h
+proc map_rgb* (r,g,b: uint8): TColor
+proc map_rgba*(r,g,b,a:uint8):TColor
+proc map_rgb_f*(r,g,b:cfloat):TColor
+proc map_rgba_f*(r,g,b,a:cfloat):TColor
+
+proc unmap_rgb*(color:TColor; r,g,b:var uint8)
+proc unmap_rgba*(color:TColor; r,g,b,a:var uint8)
+proc unmap_rgb_f*(color:TColor; r,g,b:var cfloat)
+proc unmap_rgba_f*(color:TColor; r,g,b,a:var cfloat)
+
+proc get_pixel_size*(format:cint):cint
+proc get_pixel_format_bits*(format:cint):cint 
+
+# config.h
+## TODO
+
+
+
 # display.h
 proc create_display* (w, h: cint): PDisplay 
 proc destroy_display* (display: PDisplay)
@@ -625,21 +664,9 @@ proc is_bitmap_drawing_held*:bool
 proc clear_to_color* (color: TColor)  
 proc draw_pixel* (x,y:cfloat; color:TColor)
 
-# color.h
-proc map_rgb* (r,g,b: uint8): TColor
-proc map_rgba*(r,g,b,a:uint8):TColor
-proc map_rgb_f*(r,g,b:cfloat):TColor
-proc map_rgba_f*(r,g,b,a:cfloat):TColor
-
-proc unmap_rgb*(color:TColor; r,g,b:var uint8)
-proc unmap_rgba*(color:TColor; r,g,b,a:var uint8)
-proc unmap_rgb_f*(color:TColor; r,g,b:var cfloat)
-proc unmap_rgba_f*(color:TColor; r,g,b,a:var cfloat)
-
-proc get_pixel_size*(format:cint):cint
-proc get_pixel_format_bits*(format:cint):cint 
-
-
+# error.h
+proc get_errno* : cint
+proc set_errno* (errno:cint)
 # events.h
 proc init_user_event_source* (source: PEventSource)
 proc destroy_user_event_source*(source:PEventSource)
@@ -662,7 +689,13 @@ proc wait_for_event*(Q:PEventQueue; result:var TEvent)
 proc wait_for_event_timed*(Q:PEventQueue; result:var TEvent; secs:cfloat): bool
 proc wait_for_event_until*(Q:PEventQueue; result:var TEvent; timeout:var TTimeout):bool
 
+# file.h
+## TODO
 
+
+# fullscreen_mode.h
+proc get_num_display_modes* : cint
+proc get_display_mode* (index:cint; mode:PDisplayMode): PDisplayMode
 
 # keyboard.h
 proc is_keyboard_installed*:bool
@@ -675,25 +708,6 @@ proc keycode_to_name* (keycode: cint): cstring
 proc get_keyboard_state* (result: var TKeyboardState)
 
 proc get_keyboard_event_source* : PEventSource
-
-# mouse.h
-proc is_mouse_installed* : bool
-proc install_mouse*: bool
-proc uninstall_mouse*:void
-proc get_mouse_num_buttons* : cint #cuint
-proc get_mouse_num_axes*: cint #cuint
-proc set_mouse_xy * (D:PDisplay; x,y:cint): bool
-proc set_mouse_z* (z: cint): bool
-proc set_mouse_w* (w: cint): bool
-proc set_mouse_axis*(axis,value: cint): bool
-proc get_mouse_state*(state:var TMouseState):void
-proc mouse_button_down*(state:var TMouseState; button:cint): bool
-proc get_mouse_state_axis*(state:var TMouseState;axis:cint): cint
-proc get_mouse_cursor_position*(resultX,resultY: var cint):bool
-proc grab_mouse*(D:PDisplay):bool
-proc ungrab_mouse*: bool
-
-proc get_mouse_event_source* : PEventSource
 
 # joystick.h
 proc install_joystick* : bool {.discardable.}
@@ -720,6 +734,40 @@ proc get_joystick_button_name*(J:PJoystick; button:cint): cint
 proc get_joystick_state* (J:PJoystick; result:var TJoystickState)
 
 proc get_joystick_event_source* : PEventSource
+
+# memory.h
+## TODO wrap when someone requests it
+
+# monitor.h
+proc get_num_video_adapters* : cint
+proc get_monitor_info* (adapter:cint; info:var TMonitorInfo):bool
+
+
+# mouse.h
+proc is_mouse_installed* : bool
+proc install_mouse*: bool
+proc uninstall_mouse*:void
+proc get_mouse_num_buttons* : cint #cuint
+proc get_mouse_num_axes*: cint #cuint
+proc set_mouse_xy * (D:PDisplay; x,y:cint): bool
+proc set_mouse_z* (z: cint): bool
+proc set_mouse_w* (w: cint): bool
+proc set_mouse_axis*(axis,value: cint): bool
+proc get_mouse_state*(state:var TMouseState):void
+proc mouse_button_down*(state:var TMouseState; button:cint): bool
+proc get_mouse_state_axis*(state:var TMouseState;axis:cint): cint
+proc get_mouse_cursor_position*(resultX,resultY: var cint):bool
+proc grab_mouse*(D:PDisplay):bool
+proc ungrab_mouse*: bool
+proc get_mouse_event_source* : PEventSource
+
+# mouse_cursor.h
+proc create_mouse_cursor* (bmp:PBitmap; xfocus,yfocus:cint): PMouseCursor
+proc destroy_mouse_cursor*(cursor:PMouseCursor)
+proc set_mouse_cursor* (D:PDisplay; cursor:PMouseCursor): bool
+proc set_system_mouse_cursor* (D:PDisplay; cursor:TSystemMouseCursor):bool
+proc show_mouse_cursor* (D:PDisplay)
+proc hide_mouse_cursor* (D:PDisplay)
 
 # transformations.h
 proc use_transform* (trans:PTransform)
