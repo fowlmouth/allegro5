@@ -445,6 +445,13 @@ type TSystemMouseCursor* {.size:sizeof(cint).} = enum
   SysCursorResizeNE, SysCursorProgress, SysCursorPrecision,
   SysCursorLink, SysCursorAltSelect, SysCursorUnavailable
 
+# system.h
+type
+ TAtExitFunc * = proc: cint {.cdecl.} 
+ TStandardPath* {.size:sizeof(cint).} = enum
+  PathResources, PathTemp, PathUserData, PathUserHome, PathUserSettings,
+  PathUserDocuments, PathExename
+
 # transformations.h
 type 
  PTransform* = var TTransform
@@ -454,6 +461,7 @@ type
 # utf8.h
 type  
   UStr* = ptr object
+  PUstrInfo* = ptr object
 
 # allegro_font.h
 type
@@ -488,10 +496,12 @@ proc emit_user_event* (
     source: PEventSource; 
     event: ptr TEvent; 
     destructor: proc(userEvent: ptr TUserEvent){.cdecl.} ):bool{.importAL.}
-# system.h
-proc install_system* (version: cint, atExitPTR: proc: cint{.cdecl.}): bool {.importAL, discardable.}
 
 {.push importc: "al_$1".}
+# altime.h
+proc get_time* : cdouble
+proc rest* (seconds: cdouble)
+proc init_timeout* (timeout: ptr TTimeout; seconds: cdouble)  
 
 # bitmap.h
 proc set_new_bitmap_format*(format:cint)
@@ -769,19 +779,25 @@ proc set_system_mouse_cursor* (D:PDisplay; cursor:TSystemMouseCursor):bool
 proc show_mouse_cursor* (D:PDisplay)
 proc hide_mouse_cursor* (D:PDisplay)
 
-# transformations.h
-proc use_transform* (trans:PTransform)
-proc copy_transform*(dest, src:PTransform)
-proc identity_transform*(trans:PTransform)
-proc build_transform* (trans:PTransform; x,y,sw,sy,theta:cfloat)
-proc translate_transform*(trans:PTransform; x,y:cfloat)
-proc rotate_transform*(trans:PTransform; theta:cfloat)
-proc scale_transform*(trans:PTransform; sx,sy:cfloat)
-proc transform_coordinates* (tran:PTransform; x,y:var cfloat)
-proc compose_transform* (trans,other:PTransform)
-proc get_current_transform* : PTransform
-proc invert_transform* (trans:PTransform)
-proc check_inverse* (trans:PTransform; tol:cfloat): cint
+# path.h
+## TODO this is an ugly module, only wrap it if its used anywhere else
+
+# system.h
+proc install_system* (version: cint, atExitPTR: TAtExitFunc): bool {.discardable.}
+proc uninstall_system*:void
+proc is_system_installed* : bool
+proc get_system_driver* : pointer # ALLEGRO_SYSTEM*
+proc get_system_config* : pointer # ALLEGRO_CONFIG*
+proc get_standard_path* (kind:TStandardPath): pointer # _PATH*
+proc set_exe_name* (path:cstring)
+proc set_org_name* (orgName:cstring)
+proc set_app_name* (appName:cstring)
+proc get_org_name* : cstring
+proc get_app_name* : cstring
+proc inhibit_screensaver* (inhibit:bool): bool
+
+# thread.h
+## TODO on request
 
 # timer.h
 proc create_timer* (seconds: cdouble) : PTimer
@@ -796,10 +812,40 @@ proc set_timer_count* (T:PTimer; count:int64)
 proc add_timer_count* (T:PTimer; diff:int64)
 proc get_timer_event_source*(T:PTimer):PEventSource
 
-# altime.h
-proc get_time* : cdouble
-proc rest* (seconds: cdouble)
-proc init_timeout* (timeout: ptr TTimeout; seconds: cdouble)  
+# tls.h
+## TODO with threads.h
+
+# transformations.h
+proc use_transform* (trans:PTransform)
+proc copy_transform*(dest, src:PTransform)
+proc identity_transform*(trans:PTransform)
+proc build_transform* (trans:PTransform; x,y,sw,sy,theta:cfloat)
+proc translate_transform*(trans:PTransform; x,y:cfloat)
+proc rotate_transform*(trans:PTransform; theta:cfloat)
+proc scale_transform*(trans:PTransform; sx,sy:cfloat)
+proc transform_coordinates* (tran:PTransform; x,y:var cfloat)
+proc compose_transform* (trans,other:PTransform)
+proc get_current_transform* : PTransform
+proc invert_transform* (trans:PTransform)
+proc check_inverse* (trans:PTransform; tol:cfloat): cint
+
+# utf8.h
+proc ustr_new* (s:cstring): USTR
+proc ustr_new_from_buffer* (s:cstring; size:csize): USTR
+proc ustr_newf* (fmt:cstring):USTR {.varargs.}
+proc ustr_free* (us:USTR)
+proc cstr* (us:USTR):cstring
+proc ustr_to_buffer* (us:USTR; buffer:cstring; size:cint)
+proc cstr_dup* (us:USTR):cstring
+proc ustr_dup* (us:USTR): USTR
+proc ustr_dup_substr* (us:USTR; startPos,endPos:cint): USTR
+
+proc ustr_empty_string: USTR
+proc ref_cstr* (info: PUstrInfo; s:cstring): USTR
+proc ref_buffer* (info:PUstrInfo; s:cstring; size:csize): USTR
+proc ref_ustr* (info:PUstrInfo; us:USTR; startPos,endPos:cint): USTR
+
+# jeez this a big file. stopped at "sizes and offsets" (TODO)
 
 {.pop.}
 {.pop.}
