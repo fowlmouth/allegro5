@@ -408,7 +408,9 @@ type
 type PFile* = ptr object
 
 # transformations.h
-type TTransform* = object
+type 
+ PTransform* = var TTransform
+ TTransform* = object
   m*: array[4, array[4, cfloat]]
 
 # utf8.h
@@ -586,11 +588,11 @@ proc reset_new_display_options()
 proc get_display_option*(D:PDisplay; option:cint):cint
 
 proc hold_bitmap_drawing*(hold:bool)
-proc is_bitmap_drawing_help*:bool
+proc is_bitmap_drawing_held*:bool
 
 # drawing.h
 proc clear_to_color* (color: TColor)  
-
+proc draw_pixel* (x,y:cfloat; color:TColor)
 
 # color.h
 proc map_rgb* (r,g,b: uint8): TColor
@@ -751,12 +753,12 @@ proc draw_justified_ustr* (font:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:
 proc draw_textf* (F:PFont; color:TColor; x,y:cfloat; flags:cint; format:cstring){.varargs.}
 proc draw_justified_textf* (F:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; format:cstring) {.varargs.}
 proc get_text_width* (F:PFont; str:cstring): cint
-proc get_ustr_width* (F:PFont; ustr:PUSTR): cint
+proc get_ustr_width* (F:PFont; ustr:USTR): cint
 proc get_font_line_height* (F:PFont): cint
 proc get_font_ascent* (F:PFont):cint
 proc get_font_descent*(F:PFont):cint
 proc destroy_font* (F:PFont)
-proc get_ustr_dimensions* (F:PFont; text:PUSTR; bbx,bby,bbw,bbh:var cint)
+proc get_ustr_dimensions* (F:PFont; text:USTR; bbx,bby,bbw,bbh:var cint)
 proc get_text_dimensions* (F:PFont; text:cstring; bbx,bby,bbw,bbh:var cint)
 
 proc init_font_addon*:bool
