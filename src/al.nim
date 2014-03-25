@@ -748,22 +748,16 @@ proc draw_text* (font:PFont; color:TColor; x,y:cfloat; flags:cint; text:cstring)
 proc draw_justified_text* (font:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; text:cstring): void
 proc draw_justified_ustr* (font:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; text:USTR): void
 
-discard """
-ALLEGRO_FONT_PRINTFUNC(void, al_draw_textf, (const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, char const *format, ...), 6, 7);
-ALLEGRO_FONT_PRINTFUNC(void, al_draw_justified_textf, (const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x1, float x2, float y, float diff, int flags, char const *format, ...), 8, 9);
-ALLEGRO_FONT_FUNC(int, al_get_text_width, (const ALLEGRO_FONT *f, const char *str));
-ALLEGRO_FONT_FUNC(int, al_get_ustr_width, (const ALLEGRO_FONT *f, const ALLEGRO_USTR *ustr));
-ALLEGRO_FONT_FUNC(int, al_get_font_line_height, (const ALLEGRO_FONT *f));
-ALLEGRO_FONT_FUNC(int, al_get_font_ascent, (const ALLEGRO_FONT *f));
-ALLEGRO_FONT_FUNC(int, al_get_font_descent, (const ALLEGRO_FONT *f));
-ALLEGRO_FONT_FUNC(void, al_destroy_font, (ALLEGRO_FONT *f));
-ALLEGRO_FONT_FUNC(void, al_get_ustr_dimensions, (const ALLEGRO_FONT *f,
-   ALLEGRO_USTR const *text,
-   int *bbx, int *bby, int *bbw, int *bbh));
-ALLEGRO_FONT_FUNC(void, al_get_text_dimensions, (const ALLEGRO_FONT *f,
-   char const *text,
-   int *bbx, int *bby, int *bbw, int *bbh));
-"""
+proc draw_textf* (F:PFont; color:TColor; x,y:cfloat; flags:cint; format:cstring){.varargs.}
+proc draw_justified_textf* (F:PFont; color:TColor; x1,x2,y,diff:cfloat; flags:cint; format:cstring) {.varargs.}
+proc get_text_width* (F:PFont; str:cstring): cint
+proc get_ustr_width* (F:PFont; ustr:PUSTR): cint
+proc get_font_line_height* (F:PFont): cint
+proc get_font_ascent* (F:PFont):cint
+proc get_font_descent*(F:PFont):cint
+proc destroy_font* (F:PFont)
+proc get_ustr_dimensions* (F:PFont; text:PUSTR; bbx,bby,bbw,bbh:var cint)
+proc get_text_dimensions* (F:PFont; text:cstring; bbx,bby,bbw,bbh:var cint)
 
 proc init_font_addon*:bool
 proc shutdown_font_addon*:void
