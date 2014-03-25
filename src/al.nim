@@ -536,6 +536,20 @@ AL_FUNC(bool, al_save_bitmap_f, (ALLEGRO_FILE *fp, const char *ident, ALLEGRO_BI
 proc load_bitmap* (filename:cstring): PBitmap
 proc save_bitmap* (filename:string,bitmap:PBitmap): bool
 
+
+# bitmap_lock.h
+type
+ TLockMode* = enum
+  Lock_RW, Lock_RO, Lock_WO
+ TLockedRegion* = object
+  data*:pointer
+  format*,pitch*,pixelSize*:cint
+
+proc lock_bitmap* (BMP:PBitmap; format:cint; flags:TLockMode): PLockedRegion
+proc lock_bitmap_region* (BMP:PBitmap; x,y,w,h,format:cint; flags:TLockMode): PLockedRegion
+proc unlock_bitmap* (BMP:PBitmap)
+proc is_bitmap_locked*(BMP:PBitmap):bool
+
 # display.h
 proc create_display* (w, h: cint): PDisplay 
 proc destroy_display* (display: PDisplay)
