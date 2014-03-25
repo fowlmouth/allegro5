@@ -399,6 +399,24 @@ type
 const
   FlipHorizontal* = cint(1 shl 0)
   FlipVertical* = cint(1 shl 1) 
+
+# bitmap_lock.h
+type
+ TLockMode* {.size:sizeof(cint).} = enum
+  Lock_RW, Lock_RO, Lock_WO
+ PLockedRegion* = ptr TLockedRegion
+ TLockedRegion* = object
+  data*:pointer
+  format*,pitch*,pixelSize*:cint
+
+# blender.h
+type
+  TBlendMode* {.size:sizeof(cint).} = enum
+    BlendZero, BlendOne, BlendAlpha, BlendInverseAlpha, BlendSrcColor,
+    BlendDestColor, BlendInverseSrcColor, BlendInverseDestColor
+  TBlendOp* {.size:sizeof(cint).} = enum
+    BlendAdd, BlendSrcMinusDest, BlendDestMinusSrc
+
 # color.h
 type
   TColor* = object{.pure.}
@@ -538,17 +556,16 @@ proc save_bitmap* (filename:string,bitmap:PBitmap): bool
 
 
 # bitmap_lock.h
-type
- TLockMode* = enum
-  Lock_RW, Lock_RO, Lock_WO
- TLockedRegion* = object
-  data*:pointer
-  format*,pitch*,pixelSize*:cint
-
 proc lock_bitmap* (BMP:PBitmap; format:cint; flags:TLockMode): PLockedRegion
 proc lock_bitmap_region* (BMP:PBitmap; x,y,w,h,format:cint; flags:TLockMode): PLockedRegion
 proc unlock_bitmap* (BMP:PBitmap)
 proc is_bitmap_locked*(BMP:PBitmap):bool
+
+# blender.h
+proc set_blender* (op,source,dest:cint)
+proc get_blender* (op,source,dest:var cint)
+proc set_separate_blender* (op,source,dest,alphaOp,alphaSource,alphaDest:cint)
+proc get_separate_blender* (op,source,dest,alphaOp,alphaSource,alphaDest:var cint)
 
 # display.h
 proc create_display* (w, h: cint): PDisplay 
