@@ -15,6 +15,7 @@ elif defined(Windows):
   const
     dll_main = "allegro-5.0.10-mt.dll"
 
+#base.h
 const
   VERSION = 5
   SUB_VERSION = 0
@@ -26,6 +27,8 @@ const
   DATE = 20130616 # yyyymmdd
   VERSION_INT: cint = (VERSION shl 24) or (SUB_VERSION shl 16) or
     (WIP_VERSION shl 8) or RELEASE_NUMBER
+
+type TMainFunc* = proc(argc:cint; argv:cstringarray):cint{.cdecl.}
 
 template `<<` (a,b: int{lit}): expr = a shl b
 # display.h
@@ -504,10 +507,25 @@ proc emit_user_event* (
     destructor: proc(userEvent: ptr TUserEvent){.cdecl.} ):bool{.importAL.}
 
 {.push importc: "al_$1".}
+
+when defined(Windows):
+  # allegro_windows.h
+  proc get_win_window_handle* (D:PDisplay): HWND
+elif defined(MacOSX):
+  proc osx_get_window* (D:PDisplay): pointer #ptr NSWindow
+elif defined(iphone):
+  # one day lul
+  proc iphone_program_has_halted* : void
+  proc iphone_override_screen_scale* (scale:cfloat)
+
 # altime.h
 proc get_time* : cdouble
 proc rest* (seconds: cdouble)
 proc init_timeout* (timeout: ptr TTimeout; seconds: cdouble)  
+
+# base.h
+proc get_allegro_version* : uint32
+proc run_main* (argc:cint; argv:cstringarray; f:TMainFunc): cint
 
 # bitmap.h
 proc set_new_bitmap_format*(format:cint)
@@ -569,27 +587,18 @@ type IIO_FS_LoaderFunction* = proc (fp: al.PFile): PBitmap {.cdecl.}
 #typedef bool (*ALLEGRO_IIO_SAVER_FUNCTION)(const char *filename, ALLEGRO_BITMAP *bitmap);
 type IIO_SaverFunction* = proc(filename:cstring, bitmap:PBitmap): bool{.cdecl.}
 #typedef bool (*ALLEGRO_IIO_FS_SAVER_FUNCTION)(ALLEGRO_FILE *fp, ALLEGRO_BITMAP *bitmap);
+type IIO_FS_SaverFunction* = proc(fp: al.PFile; bmp:PBitmap): bool {.cdecl.}
 
 {.push importc:"al_$1".}
 proc register_bitmap_loader*(ext:cstring, f:IIOLoaderFunction):bool
 proc register_bitmap_saver*(ext:cstring, f:IIOSaverFunction):bool
+proc register_bitmap_loader* (ext:cstring; f:IIOFsLoaderFunction): bool
+proc register_bitmap_saver* (ext:cstring; f:IIOFsSaverFunction): bool
 
-discard """
-AL_FUNC(bool, al_register_bitmap_loader, (const char *ext, ALLEGRO_IIO_LOADER_FUNCTION loader));
-AL_FUNC(bool, al_register_bitmap_saver, (const char *ext, ALLEGRO_IIO_SAVER_FUNCTION saver));
-"""
-
-
-discard """AL_FUNC(bool, al_register_bitmap_loader_f, (const char *ext, ALLEGRO_IIO_FS_LOADER_FUNCTION fs_loader));
-AL_FUNC(bool, al_register_bitmap_saver_f, (const char *ext, ALLEGRO_IIO_FS_SAVER_FUNCTION fs_saver));
-AL_FUNC(ALLEGRO_BITMAP *, al_load_bitmap, (const char *filename));
-AL_FUNC(ALLEGRO_BITMAP *, al_load_bitmap_f, (ALLEGRO_FILE *fp, const char *ident));
-AL_FUNC(bool, al_save_bitmap, (const char *filename, ALLEGRO_BITMAP *bitmap));
-AL_FUNC(bool, al_save_bitmap_f, (ALLEGRO_FILE *fp, const char *ident, ALLEGRO_BITMAP *bitmap));
-"""
 proc load_bitmap* (filename:cstring): PBitmap
+proc load_bitmap_f* (file: al.PFile; ident: cstring): PBitmap
 proc save_bitmap* (filename:string,bitmap:PBitmap): bool
-
+proc save_bitmap_f* (file: al.PFile; ident: cstring; bmp:PBitmap): bool
 
 # bitmap_lock.h
 proc lock_bitmap* (BMP:PBitmap; format:cint; flags:TLockMode): PLockedRegion
@@ -751,6 +760,7 @@ proc get_joystick_state* (J:PJoystick; result:var TJoystickState)
 
 proc get_joystick_event_source* : PEventSource
 
+
 # memory.h
 ## TODO wrap when someone requests it
 
@@ -890,20 +900,9 @@ proc color_name*(name:cstring):TColor
 proc color_html*(str:cstring): TColor
 {.pop.}
 
-# allegro_image.h
-{.push importc: "al_$1", dynlib: dllImage.} 
-proc init_image_addon* :bool
-proc shutdown_image_addon*: void
-proc get_allegro_image_version*: uint32
-
-{.pop.}
-
 # allegro_font.h
 {.push importc:"al_$1",dynlib: dllFont.}
-
 proc register_font_loader* (ext:cstring; loader: TFontLoader): bool
-
-  
 proc load_bitmap_font* (filename:cstring): PFont
 proc load_font* (filename:cstring; size,flags:cint): PFont
 
@@ -929,6 +928,14 @@ proc get_text_dimensions* (F:PFont; text:cstring; bbx,bby,bbw,bbh:var cint)
 proc init_font_addon*:bool
 proc shutdown_font_addon*:void
 proc get_allegro_font_version*:uint32
+{.pop.}
+
+# allegro_image.h
+{.push importc: "al_$1", dynlib: dllImage.} 
+proc init_image_addon* :bool
+proc shutdown_image_addon*: void
+proc get_allegro_image_version*: uint32
+
 {.pop.}
 
 # allegro_ttf.h
@@ -1046,6 +1053,10 @@ template pushTarget* (B:PBitmap; body:stmt):stmt =
   body
   setTargetBitmap(old)
 
+template al_main* (body:stmt):stmt =
+  discard run_main(0, nil, proc(argc:cint; argv:cstringarray):cint{.cdecl.} =
+    body
+  )
 
 import os
 
@@ -1079,7 +1090,7 @@ proc initBaseAddons* : bool =
   i initPrimitivesAddon
 
 when isMainModule:
-  
+ al_main:
   if not al.init():
     quit "Failed to initialize allegro!"
   
