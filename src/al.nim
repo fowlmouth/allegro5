@@ -1,10 +1,16 @@
 when defined(Linux):
   const
-    dll_image = "liballegro_image.so.5.0.10"
     dll_main = "liballegro.so.5.0.10"
+    dll_acodec = "liballegro_acodec.so.5.0.10"
+    dll_audio = "liballegro_audio.so.5.0.10"
+    dll_color = "liballegro_color.so.5.0.10"
+    dll_dialog = "liballegro_dialog.so.5.0.10"
     dll_font = "liballegro_font.so.5.0.10"
-    dll_ttf = "liballegro_ttf.so.5.0.10"
+    dll_image = "liballegro_image.so.5.0.10"
+    dll_memfile = "liballegro_memfile.so.5.0.10"
+    dll_physfs = "liballegro_physfs.so.5.0.10"
     dll_primitives = "liballegro_primitives.so.5.0.10"
+    dll_ttf = "liballegro_ttf.so.5.0.10"
 elif defined(Windows):
   const
     dll_main = "allegro-5.0.10-mt.dll"
@@ -848,6 +854,40 @@ proc ref_ustr* (info:PUstrInfo; us:USTR; startPos,endPos:cint): USTR
 # jeez this a big file. stopped at "sizes and offsets" (TODO)
 
 {.pop.}
+{.pop.}
+
+# allegro_acodec.h
+{.push importc:"al_$1", dynlib:dll_acodec.}
+proc init_acodec_addon* : bool
+proc get_allegro_acodec_version*: uint32
+{.pop.}
+
+# allegro_audio.h
+{.push importc:"al_$1", dynlib:dll_audio.}
+#TODO
+{.pop.}
+
+# allegro_color.h
+{.push importc:"al_$1", dynlib:dll_color.}
+proc get_allegro_color_version* : uint32
+proc color_hsv_to_rgb* (H,S,V:cfloat; R,G,B:var cfloat)
+proc color_rgb_to_hsl* (R,G,B:cfloat; H,S,L:var cfloat)
+proc color_rgb_to_hsv* (R,G,B:cfloat; H,S,V:var cfloat)
+proc color_hsl_to_rgb* (H,S,L:cfloat; R,G,B:var cfloat)
+proc color_name_to_rgb*(name:cstring; R,G,B:var cfloat)
+proc color_rgb_to_name*(R,G,B:cfloat):cstring
+proc color_cmyk_to_rgb*(C,M,Y,K:cfloat; R,G,B:var cfloat)
+proc color_rgb_to_cmyk*(R,G,B:cfloat; C,M,Y,K:var cfloat)
+proc color_yuv_to_rgb* (Y,U,V:cfloat; R,G,B:var cfloat)
+proc color_rgb_to_yuv* (R,G,B:cfloat; Y,U,V:var cfloat)
+proc color_rgb_to_html*(R,G,B:cfloat; str:cstring)
+proc color_html_to_rgb*(str:cstring; R,G,B:var cfloat)
+proc color_yuv* (Y,U,V:cfloat): TColor
+proc color_cmyk*(C,M,Y,K:cfloat):TColor
+proc color_hsl* (H,S,L:cfloat):TColor
+proc color_hsv* (H,S,V:cfloat):TColor
+proc color_name*(name:cstring):TColor
+proc color_html*(str:cstring): TColor
 {.pop.}
 
 # allegro_image.h
