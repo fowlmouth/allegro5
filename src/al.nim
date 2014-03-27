@@ -1167,6 +1167,15 @@ type
  TVertex* = object
   x*,y*,z*, u*,v*: cfloat
   color*:TColor
+type
+  TSoftTriInitF*  = proc (a:pointer; b,c,d:ptr TVertex): void
+  TSoftTriFirstF* = proc (a:pointer; b,c,d,e:cint): void
+  TSoftTriStepF*  = proc (a:pointer; b:cint): void
+  TSoftTriDrawF*  = proc (a:pointer; b,c,d:pointer): void
+type
+  TSoftLineFirstF* =proc(a:pointer; b,c:cint; d,e:ptr TVertex): void
+  TSoftLineStepF*  =proc(a:pointer; b:cint): void
+  TSoftLineDrawF*  =proc(a:pointer; b,c:cint): void
 {.push importc:"al_$1",dynlib:dllPrimitives.}
 proc get_allegro_primitives_version*: uint32
 proc init_primitives_addon*:bool
@@ -1178,8 +1187,11 @@ proc draw_indexed_prim*(vertices:pointer; decl:PVertexDecl;
 proc create_vertex_decl* (elements:ptr TVertexElement; stride:cint): PVertexDecl
 proc destroy_vertex_decl*(decl:PVertexDecl): void
 
-#proc draw_soft_triangle* (v1,v2,v3: ptr TVertex; state: pointer; 
-
+proc draw_soft_triangle* (v1,v2,v3:ptr TVertex; state:pointer; 
+    init: TSoftTriInitF; first:TSoftTriFirstF; step: TSoftTriStepF;
+    draw: TSoftTriDrawF): void
+proc draw_soft_line* (v1,v2:ptr TVertex; state:pointer;
+    first: TSoftLineFirstF; step:TSoftLineStepF; draw:TSoftLineDrawF): void
 
 proc draw_line* (x1,y1,x2,y2:cfloat; color:TColor; thickness:cfloat)
 proc draw_triangle*(x1,y1,x2,y2,x3,y3:cfloat; color:TColor; thickness:cfloat)
@@ -1230,8 +1242,6 @@ proc get_allegro_ttf_version*:uint32
 proc init* (timeout: var TTimeout; seconds: cdouble) {.inline.} =
   init_timeout(timeout.addr, seconds)
 
-discard """ proc isNil* (D: PDisplay): bool {.borrow.}
- """
 proc destroy* (some: PDisplay) {.inline.} =
   some.destroy_display
 proc destroy* (Q:PEventQueue) {.inline.} =
