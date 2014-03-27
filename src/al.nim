@@ -873,8 +873,223 @@ proc get_allegro_acodec_version*: uint32
 {.pop.}
 
 # allegro_audio.h
+type TAudioDepth* = cint
+const
+  AudioDepthInt8*: TAudioDepth = 0x00
+  AudioDepthInt16*:TAudioDepth = 0x01
+  AudioDepthInt24*:TAudioDepth = 0x02
+  AudioDepthFloat32*:TAudioDepth=0x03
+  AudioDepthUnsigned*:TAudioDepth=0x08
+  AudioDepthUINT8* = AudioDepthInt8 or AudioDepthUnsigned
+  AudioDepthUINT16* = AudioDepthInt16 or AudioDepthUnsigned
+  AudioDepthUINT24* = AudioDepthInt24 or AudioDepthUnsigned
+type 
+  TChannelConf* = cint
+const
+  ChannelConf1*:TChannelConf = 0x10
+  ChannelConf2*:TChannelConf = 0x20 
+  ChannelConf3*:TChannelConf = 0x30
+  ChannelConf4*:TChannelConf = 0x40
+  ChannelConf5_1*:TChannelConf = 0x51
+  ChannelConf6_1*:TChannelConf = 0x61
+  ChannelConf7_1*:TChannelConf = 0x71
+type
+ TPlaymode* {.size:sizeof(cint).} = enum
+  PlaymodeOnce = 0x100, PlaymodeLoop = 0x101,
+  PlaymodeBidir = 0x102,PlaymodeStreamOnce = 0x103,
+  PlaymodeStreamOnedir = 0x104
+ TSampleID* = object
+  index,id:cint
+ PMixer* = ptr object
+ PSample* = ptr object
+ PSampleInstance* = ptr object
+ PAudioStream* = ptr object
+
 {.push importc:"al_$1", dynlib:dll_audio.}
-#TODO
+#/* Sample functions */
+proc create_sample* (buf:pointer; samples,freq:cuint; depth:TAudioDepth;
+                     conf:TChannelConf; freeBuffer:bool) : PSample
+proc destroy_sample*(sample:PSample): void
+
+#/* Sample instance functions */
+proc create_sample_instance* (sample:PSample): PSampleInstance
+proc destroy_sample_instance*(sample:PSampleInstance): void
+
+proc get_sample_frequency* (sample:PSample): cuint
+proc get_sample_length* (sample:PSample): cuint
+proc get_sample_depth* (sample:PSample) : TAudioDepth
+proc get_sample_channels* (sample:PSample): TChannelConf
+proc get_sample_data* (sample:PSample): pointer
+
+proc get_sample_instance_frequency* (sample: PSampleInstance): cuint
+proc get_sample_instance_length* (sample: PSampleInstance): cuint
+proc get_sample_instance_position* (smaple:PSampleInstance): cuint
+
+proc get_sample_instance_speed* (sample:PSampleInstance): cfloat
+proc get_sample_instance_gain* (sample:PSampleInstance): cfloat
+proc get_sample_instance_pan* (sample:PSampleInstance): cfloat
+proc get_sample_instance_time* (sample:PSampleInstance): cfloat
+
+proc get_sample_instance_depth* (sample:PSampleInstance): TAudioDepth
+proc get_sample_instance_channels* (sample:PSampleInstance): TChannelConf
+proc get_sample_instance_playmode* (sample:PSampleInstance): TPlaymode
+
+proc get_sample_instance_playing* (sample:PSampleInstance): bool
+proc get_sample_instance_attached* (sample:PSampleInstance): bool
+
+proc set_sample_instance_position* (sample:PSampleInstance; val:cuint): bool
+proc set_sample_instance_length* (sample:PSampleInstance; val:cuint): bool
+
+proc set_sample_instance_speed* (sample:PSampleInstance; val:cfloat):bool
+proc set_sample_instance_gain* (sample:PSampleInstance; val:cfloat):bool
+proc set_sample_instance_pan* (sample:PSampleInstance; val:cfloat):bool
+
+proc set_sample_instance_playmode* (sample:PSampleInstance; mode:TPlaymode): bool
+
+proc set_sample_instance_playing* (sample:PSampleInstance; val:bool):bool
+proc detach_sample_instance* (sample:PSampleInstance): bool
+
+proc set_sample* (sample:PSampleInstance; data:PSample):bool
+proc get_sample* (sample:PSampleInstance): PSample
+proc play_sample_instance* (sample:PSampleInstance): bool
+proc stop_sample_instance* (sample:PSampleInstance): bool
+
+#/* Stream functions */
+proc create_audio_stream* (bufferCount:csize; samples,freq:cuint; 
+        depth:TAudioDepth; channelConf:TChannelConf): PAudioStream
+# im bored
+discard """
+ALLEGRO_KCM_AUDIO_FUNC(void, al_destroy_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(void, al_drain_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
+
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_frequency, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_length, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_fragments, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_available_audio_stream_fragments, (const ALLEGRO_AUDIO_STREAM *stream));
+
+ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_speed, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_gain, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_pan, (const ALLEGRO_AUDIO_STREAM *stream));
+
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_CHANNEL_CONF, al_get_audio_stream_channels, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_AUDIO_DEPTH, al_get_audio_stream_depth, (const ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_PLAYMODE, al_get_audio_stream_playmode, (const ALLEGRO_AUDIO_STREAM *stream));
+
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_audio_stream_playing, (const ALLEGRO_AUDIO_STREAM *spl));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_audio_stream_attached, (const ALLEGRO_AUDIO_STREAM *spl));
+
+ALLEGRO_KCM_AUDIO_FUNC(void *, al_get_audio_stream_fragment, (const ALLEGRO_AUDIO_STREAM *stream));
+
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_speed, (ALLEGRO_AUDIO_STREAM *stream, float val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_gain, (ALLEGRO_AUDIO_STREAM *stream, float val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_pan, (ALLEGRO_AUDIO_STREAM *stream, float val));
+
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_playmode, (ALLEGRO_AUDIO_STREAM *stream, ALLEGRO_PLAYMODE val));
+
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_playing, (ALLEGRO_AUDIO_STREAM *stream, bool val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_detach_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_fragment, (ALLEGRO_AUDIO_STREAM *stream, void *val));
+
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_rewind_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_seek_audio_stream_secs, (ALLEGRO_AUDIO_STREAM *stream, double time));
+ALLEGRO_KCM_AUDIO_FUNC(double, al_get_audio_stream_position_secs, (ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(double, al_get_audio_stream_length_secs, (ALLEGRO_AUDIO_STREAM *stream));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_loop_secs, (ALLEGRO_AUDIO_STREAM *stream, double start, double end));
+
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_audio_stream_event_source, (ALLEGRO_AUDIO_STREAM *stream));
+
+/* Mixer functions */
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_MIXER*, al_create_mixer, (unsigned int freq,
+      ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF chan_conf));
+ALLEGRO_KCM_AUDIO_FUNC(void, al_destroy_mixer, (ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_sample_instance_to_mixer, (
+   ALLEGRO_SAMPLE_INSTANCE *stream, ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_audio_stream_to_mixer, (ALLEGRO_AUDIO_STREAM *stream,
+   ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_mixer_to_mixer, (ALLEGRO_MIXER *stream,
+   ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_postprocess_callback, (
+      ALLEGRO_MIXER *mixer,
+      void (*cb)(void *buf, unsigned int samples, void *data),
+      void *data));
+
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_mixer_frequency, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_CHANNEL_CONF, al_get_mixer_channels, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_AUDIO_DEPTH, al_get_mixer_depth, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_MIXER_QUALITY, al_get_mixer_quality, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(float, al_get_mixer_gain, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_mixer_playing, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_mixer_attached, (const ALLEGRO_MIXER *mixer));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_frequency, (ALLEGRO_MIXER *mixer, unsigned int val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_quality, (ALLEGRO_MIXER *mixer, ALLEGRO_MIXER_QUALITY val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_gain, (ALLEGRO_MIXER *mixer, float gain));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_playing, (ALLEGRO_MIXER *mixer, bool val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_detach_mixer, (ALLEGRO_MIXER *mixer));
+
+/* Voice functions */
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_VOICE*, al_create_voice, (unsigned int freq,
+      ALLEGRO_AUDIO_DEPTH depth,
+      ALLEGRO_CHANNEL_CONF chan_conf));
+ALLEGRO_KCM_AUDIO_FUNC(void, al_destroy_voice, (ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_sample_instance_to_voice, (
+   ALLEGRO_SAMPLE_INSTANCE *stream, ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_audio_stream_to_voice, (
+   ALLEGRO_AUDIO_STREAM *stream, ALLEGRO_VOICE *voice ));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_mixer_to_voice, (ALLEGRO_MIXER *mixer,
+   ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(void, al_detach_voice, (ALLEGRO_VOICE *voice));
+
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_voice_frequency, (const ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_voice_position, (const ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_CHANNEL_CONF, al_get_voice_channels, (const ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_AUDIO_DEPTH, al_get_voice_depth, (const ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_voice_playing, (const ALLEGRO_VOICE *voice));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_voice_position, (ALLEGRO_VOICE *voice, unsigned int val));
+ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_voice_playing, (ALLEGRO_VOICE *voice, bool val));
+"""
+#/* Misc. audio functions */
+proc install_audio* : bool
+proc uninstall_audio*:void
+proc is_audio_installed*:bool
+proc get_allegro_audio_version*: uint32
+
+
+proc get_channel_count* (conf: TChannelConf): csize
+proc get_audio_depth_size* (conf:TChannelConf): csize
+
+#/* Simple audio layer */
+proc reserve_samples* (samples:cint): bool
+proc get_default_mixer*: PMixer
+proc get_default_mixer* (mixer:PMixer): bool
+proc restore_default_mixer*: bool
+proc play_sample* (data:PSample; gain,pan,speed:cfloat; 
+                   loop: TPlaymode; result: var TSampleID): bool
+proc stop_sample* (spl: var TSampleID)
+proc stop_samples*: void
+
+#/* File type handlers */
+type TSampleLoader* = proc (filename:cstring): PSample 
+type TSampleSaver* = proc(filename:cstring; sample:PSample): bool
+type TAudioStreamLoader* = proc(filename:cstring; bufferCount:csize; samples:cuint): PAudioStream 
+
+proc register_sample_loader* (ext:cstring; loader: TSampleLoader): bool
+proc register_sample_saver* (ext:cstring; saver: TSampleSaver) : bool
+proc register_audio_stream_loader* (ext:cstring; streamLoader: TAudioStreamLoader): bool
+
+type TSampleLoaderFP* = proc(fp:al.PFile): PSample
+type TSampleSaverFP* = proc(fp:al.PFile; sample:PSample): bool
+type TAudioStreamLoaderFP* = proc(fp:al.PFile; bufferCount:csize; samples:cuint): PAudioStream
+proc register_sample_loader_f* (ext:cstring; loader: TSampleLoaderFP):bool
+proc register_sample_saver_f* (ext:cstring; saver: TSampleSaverFP): bool
+proc register_audio_stream_loader_f* (ext:cstring; streamLoader: TAudioStreamLoaderFP): bool
+
+proc load_sample* (filename:cstring): PSample
+proc save_sample* (filename:cstring; sample:PSample): bool
+proc load_audio_stream* (file:cstring; bufferCount:csize; samples:cuint): PAudioStream
+
+proc load_sample_f* (fp:al.PFile; ident:cstring): PSample
+proc save_sample_f* (fp:al.PFile; ident:cstring; sample:PSample): bool
+proc load_audio_stream_f* (fp:al.PFile; ident:cstring; bufferCount:csize; samples:cuint): PAudioStream
 {.pop.}
 
 # allegro_color.h
@@ -1072,8 +1287,10 @@ proc systemFontDirectories* : seq[string] =
     result = @[ "/usr/share/fonts/TTF" ]
   elif defined(Windows):
     result = @[ "/Windows/Fonts" ]  
-  else:
+  elif defined(MacOSX):
     result = @[ "/Libraries/Fonts" ]
+  else:
+    raise newException(EIO, "Unknown operating system.")
   
 proc systemFont* (f: string, size: cint; flags = 0.cint): PFont =
   let f = find_file(f, systemFontDirectories())
@@ -1084,10 +1301,19 @@ proc initBaseAddons* : bool =
   template i (f): stmt =
     if not f(): result = false
   result = true
-  i initImageAddon
+  i initAcodecAddon
   i initFontAddon
-  i initTTFAddon
+  i initImageAddon
   i initPrimitivesAddon
+  i initTTFAddon
+proc installEverything*: bool=
+  template i (f): stmt =
+    if not `install f`(): result = false
+  result = true
+  i audio
+  i keyboard
+  i joystick
+  i mouse
 
 when isMainModule:
  al_main:
@@ -1101,9 +1327,8 @@ when isMainModule:
   let timer = createTimer(1.0/60.0)
   
   let queue = createEventQueue()
-  discard al.installKeyboard()
-  discard al.installMouse()
-  discard initBaseAddons()
+  discard al.installEverything()
+  discard al.initBaseAddons()
   
   let font = systemFont("VeraMono.ttf", 46)
   
