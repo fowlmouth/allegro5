@@ -1153,15 +1153,10 @@ proc get_allegro_image_version*: uint32
 
 {.pop.}
 
-# allegro_ttf.h
-{.push importc:"al_$1",dynlib:dllTTF.}
-proc load_ttf_font* (filename:cstring; size,flags:cint): PFont
-proc load_ttf_font_f*(file:PFile; filename:cstring; size,flags:cint): PFont
-proc load_ttf_font_stretch*(filename:cstring; w,h,flags:cint): PFont
-proc load_ttf_font_stretch_f* (file:PFile; filename:cstring; w,h,flags:cint): PFont
-proc init_ttf_addon*:bool
-proc shutdown_ttf_addon*:void
-proc get_allegro_ttf_version*:uint32
+# allegro_physfs.h
+{.push importc:"al_$1",dynlib:dllPhysfs.}
+proc set_physfs_file_interface* 
+proc get_allegro_physfs_version*: uint32
 {.pop.}
 
 # allegro_primitives.h
@@ -1214,6 +1209,17 @@ proc draw_filled_pieslice* (cx,cy,r,startTheta,deltaTheta:cfloat; color:TColor)
 proc draw_filled_rounded_rectangle* (x1,y1,x2,y2,rx,ry:cfloat; color:TColor)
    
 
+{.pop.}
+
+# allegro_ttf.h
+{.push importc:"al_$1",dynlib:dllTTF.}
+proc load_ttf_font* (filename:cstring; size,flags:cint): PFont
+proc load_ttf_font_f*(file:PFile; filename:cstring; size,flags:cint): PFont
+proc load_ttf_font_stretch*(filename:cstring; w,h,flags:cint): PFont
+proc load_ttf_font_stretch_f* (file:PFile; filename:cstring; w,h,flags:cint): PFont
+proc init_ttf_addon*:bool
+proc shutdown_ttf_addon*:void
+proc get_allegro_ttf_version*:uint32
 {.pop.}
 
 {.pop.}
