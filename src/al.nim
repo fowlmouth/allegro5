@@ -1151,7 +1151,12 @@ proc get_allegro_font_version*:uint32
 proc init_image_addon* :bool
 proc shutdown_image_addon*: void
 proc get_allegro_image_version*: uint32
+{.pop.}
 
+# allegro_memfile.h
+{.push importc:"al_$1", dynlib:dllMemfile.}
+proc open_memfile* (mem:pointer; size:int64; mode:cstring): al.PFile
+proc get_allegro_memfile_version* : uint32
 {.pop.}
 
 # allegro_native_dialog.h
