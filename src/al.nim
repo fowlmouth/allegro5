@@ -343,14 +343,13 @@ macro al_evt (name, srcType): stmt {.immediate.} =
       thisField.add( $ idd[len(idd)-2] )
       thisField.add '\L'
       fields.add thisField
-    
-  
+
   const s = "type T$1Event * = object\L$2"
-  
   result = parseStmt(s.format( 
     $name, fields))
-  echo repr (result)
-  
+  when defined(debug):
+    echo repr (result)
+
 al_evt Any, PEventSource
 al_evt Display, PDisplay, tuple[x,y,width,height,orientation: cint] 
 al_evt Joystick, PJoystick, tuple[
@@ -1153,6 +1152,30 @@ proc get_allegro_image_version*: uint32
 
 {.pop.}
 
+# allegro_native_dialog.h
+type 
+  PFilechooser* = ptr object
+  PTextlog* = ptr object
+{.push importc:"al_$1",dynlib:dll_dialog.}
+proc init_native_dialog_addon* : bool
+proc shutdown_native_dialog_addon*
+
+proc create_native_file_dialog* (initialPath, title, patterns: cstring; mode:cint): PFilechooser
+proc show_native_file_dialog* (D:PDisplay; dialog:PFilechooser):bool
+proc get_native_file_dialog_count*(dialog:PFilechooser): cint
+proc get_native_file_dialog_path*(dialog:PFilechooser; index:csize):cstring
+proc destroy_native_file_dialog* (dialog:PFilechooser)
+
+proc show_native_message_box* (D:PDisplay; title,heading,text,buttons:cstring; flags:cint): cint
+
+proc open_native_text_log* (title:cstring; flags:cint): PTextlog
+proc close_native_text_log*(TL:PTextlog)
+proc append_native_text_log*(TL:PTextlog; format:cstring) {.varargs.}
+proc get_native_text_log_event_source*(TL:PTextlog): PEventSource
+
+proc get_allegro_native_dialog_version*: uint32
+{.pop.}
+
 # allegro_physfs.h
 {.push importc:"al_$1",dynlib:dllPhysfs.}
 proc set_physfs_file_interface* 
@@ -1322,6 +1345,7 @@ proc initBaseAddons* : bool =
   i initImageAddon
   i initPrimitivesAddon
   i initTTFAddon
+  i initNativeDialogAddon
 proc installEverything*: bool=
   template i (f): stmt =
     if not `install f`(): result = false
@@ -1365,13 +1389,14 @@ when isMainModule:
     
     case ev.kind
     of eventTimer:
-      # draw
-      pushTarget(display.getBackbuffer):
-        clearToColor(mapRGB(0,0,0))
-        
-        font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
-        
-        flipDisplay()
+      if ev.timer.source == timer.eventSource:
+        # draw
+        pushTarget(display.getBackbuffer):
+          clearToColor(mapRGB(0,0,0))
+          
+          font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
+          
+          flipDisplay()
     
     of eventDisplayClose:
       break
