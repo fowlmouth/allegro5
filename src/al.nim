@@ -310,7 +310,9 @@ type
   EVENT_DISPLAY_FOUND               = 44,
   EVENT_DISPLAY_SWITCH_IN           = 45,
   EVENT_DISPLAY_SWITCH_OUT          = 46,
-  EVENT_DISPLAY_ORIENTATION         = 47
+  EVENT_DISPLAY_ORIENTATION         = 47,
+  
+  EVENT_NATIVE_DIALOG_CLOSE         = 600
 
  TEventSource* = distinct array[32, cint]
  PEventSource* = ptr TEventSource
@@ -1156,6 +1158,23 @@ proc get_allegro_image_version*: uint32
 type 
   PFilechooser* = ptr object
   PTextlog* = ptr object
+const
+  FilechooserFileMustExist* = 1.cint
+  FilechooserSave* = 2.cint
+  FilechooserFolder* = 4.cint
+  FilechooserPictures* = 8.cint
+  FilechooserShowHidden* = 16.cint
+  FilechooserMultiple* = 32.cint
+  
+  MessageBoxWarn* = (1 << 0).cint
+  MessageBoxError* = (1 << 1).cint
+  MessageBoxOKCancel* = (1 << 2).cint
+  MessageBoxYesNo* = (1 << 3).cint
+  MessageBoxQuestion* = (1 << 4).cint
+  
+  TextlogNoClose* = (1 << 0).cint
+  TextlogMonospace* = (1 << 1).cint
+
 {.push importc:"al_$1",dynlib:dll_dialog.}
 proc init_native_dialog_addon* : bool
 proc shutdown_native_dialog_addon*
@@ -1356,54 +1375,62 @@ proc installEverything*: bool=
   i mouse
 
 when isMainModule:
- al_main:
-  if not al.init():
-    quit "Failed to initialize allegro!"
-  
-  let display = al.createDisplay(640, 480)
-  if display.isNil:
-    quit "Failed to create display!"
-  
-  let timer = createTimer(1.0/60.0)
-  
-  let queue = createEventQueue()
-  discard al.installEverything()
-  discard al.initBaseAddons()
-  
-  let font = systemFont("VeraMono.ttf", 46)
-  
-  #queue.register display.getEventSource
-  queue.registerEventSource display.EventSource
-  queue.registerEventSource timer.eventSource
-  queue.registerEventSource getMouseEventSource()
-  queue.register getKeyboardEventSource()
-  
-  timer.start
-  
-  al.clearToColor(al.mapRGB(0,0,0))
-  al.flipDisplay()
-  
-  var ev: TEvent
-  while true:
-    queue.waitForEvent ev
+  al_main:
+    if not al.init():
+      quit "Failed to initialize allegro!"
     
-    case ev.kind
-    of eventTimer:
-      if ev.timer.source == timer.eventSource:
-        # draw
-        pushTarget(display.getBackbuffer):
-          clearToColor(mapRGB(0,0,0))
+    let display = al.createDisplay(640, 480)
+    if display.isNil:
+      quit "Failed to create display!"
+    
+    discard al.installEverything()
+    discard al.initBaseAddons()
+    
+    let 
+      drawTimer = createTimer(1.0/60.0)
+      queue = createEventQueue()
+      font = systemFont("VeraMono.ttf", 46)
+    
+    queue.registerEventSource display.EventSource
+    queue.registerEventSource drawTimer.eventSource
+    queue.registerEventSource getMouseEventSource()
+    queue.register getKeyboardEventSource()
+    
+    drawTimer.start
+    
+    proc reDraw =
+      # draw
+      pushTarget(display.getBackbuffer):
+        clearToColor mapRGB(0,0,0)
+        
+        font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
+        
+        flipDisplay()
+    
+    al.clearToColor al.mapRGB(0,0,0)
+    al.flipDisplay()
+    
+    var ev: TEvent
+    while true:
+      queue.waitForEvent ev
+      
+      case ev.kind
+      of eventTimer:
+        if ev.timer.source == drawTimer.eventSource:
+          redraw()
           
-          font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
-          
-          flipDisplay()
+      
+      of eventDisplayClose:
+        break
+      
+      of eventKeyDown:
+        
+        if ev.keyboard.keycode == keyEscape:
+          break
+
+      else:
+        echo "Unhandled event ", ev.kind
     
-    of eventDisplayClose:
-      break
-    
-    else:
-      echo "Unhandled event ", ev.kind
-  
-  queue.destroy
-  al.destroy(display)
+    queue.destroy
+    display.destroy
 
