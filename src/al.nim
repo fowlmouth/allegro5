@@ -323,8 +323,6 @@ macro al_evt (name, srcType): stmt {.immediate.} =
   let cs = callsite()
   cs.expectKind nnkCommand
   
-  echo lispRepr(cs)
-  
   var fields = ""
   fields.add " kind*: TEventType\L"
   fields.add " source*: "
@@ -1295,6 +1293,8 @@ proc destroy* (Q:PEventQueue) {.inline.} =
   q.destroy_eventqueue
 proc destroy* (B:PBitmap) {.inline.}=
   b.destroyBitmap
+proc destroy* (T:PTimer){.inline.} = 
+  T.destroyTimer
 
 proc get_size* (D:PDisplay): tuple[w,h:cint] =
   result.w = d.get_display_width
@@ -1310,14 +1310,32 @@ proc get_size* (B:PBitmap): tuple[w,h: cint] {.inline.} =
 
 proc is_key_down* (state: var TKeyboardState; keycode: cint): bool {.inline.} =
   al_key_down(state, keycode)
+proc is_mouse_button_down* (state: var TMouseState; button:cint): bool {.inline.}=
+  mouse_button_down(state, button)
 
 proc eventSource* (D:PDisplay): PEventSource {.inline.} = 
   D.getDisplayEventSource
 
-proc start*(T:PTimer){.inline.}=T.startTimer
+proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=Q.registerEventSource(SRC)
+
+
+proc start* (T:PTimer) {.inline.} = T.start_timer
+proc stop* (T:PTimer) {.inline.} = T.stop_timer
+proc started* (T:PTimer):bool{.inline.}=T.get_timer_started
+proc speed* (T:PTimer): cdouble {.inline.}=T.get_timer_speed
+proc `speed=`*(T:PTimer; seconds:cdouble) {.inline.} = T.set_timer_speed(seconds)
+proc count* (T:PTimer): int64 {.inline.} = T.get_timer_count
+proc `count=`*(T:PTimer; c:int64){.inline.}=T.set_timer_count(c)
 proc eventSource*(T:PTimer):PEventSource{.inline.}=T.getTimerEventSource
 
-proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=Q.registerEventSource(SRC)
+proc use* (T:PTransform) {.inline.} = T.use_transform
+proc copy*(Dest,Src:PTransform) {.inline.}= dest.copyTransform(src)
+proc identity*(T:PTransform) {.inline.} = T.identityTransform
+proc build*(T:PTransform; x,y,sw,sy,theta:cfloat) {.inline.} = T.buildTransform(x,y,sw,sy,theta)
+proc translate*(T:PTransform; x,y:cfloat){.inline.} = T.translateTransform(x,y)
+proc rotate*(T:PTransform; theta:cfloat){.inline.} = T.rotateTransform(theta)
+proc scale* (T:PTransform; sx,sy:cfloat){.inline.} = T.scaleTransform(sx,sy)
+
 
 ## higher level helper functions
 
