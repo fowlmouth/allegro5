@@ -1284,22 +1284,9 @@ proc get_allegro_ttf_version*:uint32
 ## aliases
 
 
-proc init* (timeout: var TTimeout; seconds: cdouble) {.inline.} =
-  init_timeout(timeout.addr, seconds)
-
-proc destroy* (some: PDisplay) {.inline.} =
-  some.destroy_display
-proc destroy* (Q:PEventQueue) {.inline.} =
-  q.destroy_eventqueue
+# bitmap
 proc destroy* (B:PBitmap) {.inline.}=
   b.destroyBitmap
-proc destroy* (T:PTimer){.inline.} = 
-  T.destroyTimer
-
-proc get_size* (D:PDisplay): tuple[w,h:cint] =
-  result.w = d.get_display_width
-  result.h = d.get_display_height
-
 proc get_width* (B:PBitmap):cint {.inline.} =
   b.getBitmapWidth
 proc get_height*(B:PBitmap):cint{.inline.}=
@@ -1307,18 +1294,42 @@ proc get_height*(B:PBitmap):cint{.inline.}=
 proc get_size* (B:PBitmap): tuple[w,h: cint] {.inline.} =
   (b.getWidth, b.getHeight)
 
+# display
+proc destroy* (some: PDisplay) {.inline.} =
+  some.destroy_display
+proc eventSource* (D:PDisplay): PEventSource {.inline.} = 
+  D.getDisplayEventSource
+proc get_width*(D:PDisplay):cint {.inline.} =
+  D.get_display_width
+proc get_height*(D:PDisplay):cint {.inline.}=
+  D.get_display_height
+proc get_size* (D:PDisplay): tuple[w,h:cint] =
+  result.w = d.get_display_width
+  result.h = d.get_display_height
 
+
+# event queue
+proc destroy* (Q:PEventQueue) {.inline.} =
+  q.destroy_eventqueue
+proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=
+  Q.registerEventSource(SRC)
+
+
+# keyboard
 proc is_key_down* (state: var TKeyboardState; keycode: cint): bool {.inline.} =
   al_key_down(state, keycode)
+
+# mouse
 proc is_mouse_button_down* (state: var TMouseState; button:cint): bool {.inline.}=
   mouse_button_down(state, button)
 
-proc eventSource* (D:PDisplay): PEventSource {.inline.} = 
-  D.getDisplayEventSource
 
-proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=Q.registerEventSource(SRC)
+# timer
+proc init* (timeout: var TTimeout; seconds: cdouble) {.inline.} =
+  init_timeout(timeout.addr, seconds)
 
-
+proc destroy* (T:PTimer){.inline.} = 
+  T.destroy_timer
 proc start* (T:PTimer) {.inline.} = T.start_timer
 proc stop* (T:PTimer) {.inline.} = T.stop_timer
 proc started* (T:PTimer):bool{.inline.}=T.get_timer_started
@@ -1328,6 +1339,7 @@ proc count* (T:PTimer): int64 {.inline.} = T.get_timer_count
 proc `count=`*(T:PTimer; c:int64){.inline.}=T.set_timer_count(c)
 proc eventSource*(T:PTimer):PEventSource{.inline.}=T.getTimerEventSource
 
+# transform
 proc use* (T:PTransform) {.inline.} = T.use_transform
 proc copy*(Dest,Src:PTransform) {.inline.}= dest.copyTransform(src)
 proc identity*(T:PTransform) {.inline.} = T.identityTransform
@@ -1397,63 +1409,4 @@ proc installEverything*: bool=
   i joystick
   i mouse
 
-when isMainModule:
-  al_main:
-    if not al.init():
-      quit "Failed to initialize allegro!"
-    
-    let display = al.createDisplay(640, 480)
-    if display.isNil:
-      quit "Failed to create display!"
-    
-    discard al.installEverything()
-    discard al.initBaseAddons()
-    
-    let 
-      drawTimer = createTimer(1.0/60.0)
-      queue = createEventQueue()
-      font = systemFont("VeraMono.ttf", 46)
-    
-    queue.registerEventSource display.EventSource
-    queue.registerEventSource drawTimer.eventSource
-    queue.registerEventSource getMouseEventSource()
-    queue.register getKeyboardEventSource()
-    
-    drawTimer.start
-    
-    proc reDraw =
-      # draw
-      pushTarget(display.getBackbuffer):
-        clearToColor mapRGB(0,0,0)
-        
-        font.drawText mapRGB(255,255,255), 10,10, FontAlignLeft, "Hello, Nimrods."
-        
-        flipDisplay()
-    
-    al.clearToColor al.mapRGB(0,0,0)
-    al.flipDisplay()
-    
-    var ev: TEvent
-    while true:
-      queue.waitForEvent ev
-      
-      case ev.kind
-      of eventTimer:
-        if ev.timer.source == drawTimer.eventSource:
-          redraw()
-          
-      
-      of eventDisplayClose:
-        break
-      
-      of eventKeyDown:
-        
-        if ev.keyboard.keycode == keyEscape:
-          break
-
-      else:
-        echo "Unhandled event ", ev.kind
-    
-    queue.destroy
-    display.destroy
 
