@@ -12,6 +12,7 @@ when defined(Linux):
     dll_primitives = "liballegro_primitives.so.5.0.10"
     dll_ttf = "liballegro_ttf.so.5.0.10"
 elif defined(Windows):
+  import winlean
   const
     dll_main = "allegro-5.0.10-mt.dll"
 
@@ -252,7 +253,7 @@ type
   PKeyboard* = ptr object
   TKeyboardState* = object
     display*: PDisplay
-    internal: array[int((KeyMax + 31)/32), cuint]
+    internal: array[8, cuint] #int((KeyMax + 31) div 32), cuint]
 
 # mouse.h
 const MouseMaxExtraAxes * = 4
@@ -375,13 +376,6 @@ type
   mouse*:TMouseEvent
   timer*:TTimerEvent
   user*:TUserEvent
-
- TEvent2* = object #variant version
-   case kind*: TEventType
-   of EVENT_KEY_DOWN, EVENT_KEY_CHAR, EVENT_KEY_UP:
-     keyboard*: TKeyboardEvent
-   else:
-     nil
 
  PEventQueue* = ptr object
 
@@ -1366,6 +1360,20 @@ template al_main* (body:stmt):stmt =
     body
   )
 
+type TRect*[T] = tuple
+  x,y,w,h: T
+proc set_clip* (rect: TRect[int32]) {.inline.} =
+  set_clipping_rectangle rect[0], rect[1], rect[2], rect[3]
+proc get_clip* (result:var TRect[int32]) {.inline.} =
+  get_clipping_rectangle result[0], result[1], result[2], result[3]
+template push_clip* (clip: TRect[int32]; body:stmt): stmt =
+  block:
+    var old: TRect[int32]
+    get_clip old
+    set_clip clip
+    body
+    set_clip old
+
 import os
 
 proc findFile (f: string; dirs: seq[string]): string =
@@ -1377,12 +1385,10 @@ proc findFile (f: string; dirs: seq[string]): string =
 
 proc systemFontDirectories* : seq[string] =
   when defined(Linux):
-    result = @[ "/usr/share/fonts/TTF" ]
-  elif defined(Windows):
-    result = @[ "/Windows/Fonts" ]  
+    result = @[ "/usr/share/fonts/TTF" ]  
   elif defined(MacOSX):
     result = @[ "/Libraries/Fonts" ]
-  else:
+  elif defined(Windows) or true:
     raise newException(EIO, "Unknown operating system.")
   
 proc systemFont* (f: string, size: cint; flags = 0.cint): PFont =
