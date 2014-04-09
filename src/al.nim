@@ -697,6 +697,7 @@ proc get_event_source_data* (src:PEventSource): pointer
 proc create_event_queue* : PEventQueue
 proc destroy_event_queue* (Q:PEventQueue)
 proc register_event_source*(Q:PEventQueue; src:PEventSource)
+proc unregister_event_source*(Q:PEventQueue; src:PEventSource)
 proc is_event_queue_empty*(Q:PEventQueue): bool
 proc get_next_event*(Q:PEventQueue; result:var TEvent): bool
 proc peek_next_event*(Q:PEventQueue; result:var TEvent):bool
