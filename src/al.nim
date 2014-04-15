@@ -1367,9 +1367,19 @@ template pushTarget* (B:PBitmap; body:stmt):stmt =
   setTargetBitmap(old)
 
 template al_main* (body:stmt):stmt =
+  ## Wrap some code in al_run_main
   discard run_main(0, nil, proc(argc:cint; argv:cstringarray):cint{.cdecl.} =
     body
   )
+template al_main* [T] (arg:T; func:proc(arg:T){.nimcall.}): stmt =
+  ## Wrap code for al_run_main and pass an argument along
+  block:
+    type TBlah = tuple[f: type(func), x: type(arg)]
+    var hax: TBlah = (func,arg)
+    discard al.run_main(0, cast[cstringarray](hax.addr)) do (argc:cint;argv:cstringarray)->cint{.cdecl.}:
+      let hax = cast[ptr TBlah](argv)
+      hax.f hax.x
+
 
 type TRect*[T] = tuple
   x,y,w,h: T
