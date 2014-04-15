@@ -12,7 +12,7 @@ when defined(Linux):
     dll_primitives = "liballegro_primitives.so.5.0.10"
     dll_ttf = "liballegro_ttf.so.5.0.10"
 elif defined(Windows):
-  import winlean
+  import windows
   const
     dll_main = "allegro-5.0.dll"
     dll_acodec = "allegro_acodec-5.0.dll"
