@@ -1,17 +1,4 @@
-when defined(Linux):
-  const
-    dll_main = "liballegro.so.5.0.10"
-    dll_acodec = "liballegro_acodec.so.5.0.10"
-    dll_audio = "liballegro_audio.so.5.0.10"
-    dll_color = "liballegro_color.so.5.0.10"
-    dll_dialog = "liballegro_dialog.so.5.0.10"
-    dll_font = "liballegro_font.so.5.0.10"
-    dll_image = "liballegro_image.so.5.0.10"
-    dll_memfile = "liballegro_memfile.so.5.0.10"
-    dll_physfs = "liballegro_physfs.so.5.0.10"
-    dll_primitives = "liballegro_primitives.so.5.0.10"
-    dll_ttf = "liballegro_ttf.so.5.0.10"
-elif defined(Windows):
+when defined(Windows):
   import windows
   const
     dll_main = "allegro-5.0.dll"
@@ -25,6 +12,32 @@ elif defined(Windows):
     dll_memfile = "allegro_memfile-5.0.dll"
     dll_physfs = "allegro_physfs-5.0.dll"
     dll_ttf = "allegro_ttf-5.0.dll"
+elif defined(MacOSX):
+  const
+    dll_main = "liballegro.5.1.dylib"
+    dll_acodec = "liballegro_acodec.5.1.dylib"
+    dll_audio = "liballegro_audio.5.1.dylib"
+    dll_color = "liballegro_color.5.1.dylib"
+    dll_dialog = "liballegro_dialog.5.1.dylib"
+    dll_font = "liballegro_font.5.1.dylib"
+    dll_image = "liballegro_image.5.1.dylib"
+    dll_memfile = "liballegro_memfile.5.1.dylib"
+    dll_physfs = "liballegro_physfs.5.1.dylib"
+    dll_primitives = "liballegro_primitives.5.1.dylib"
+    dll_ttf = "liballegro_ttf.5.1.dylib"
+else:
+  const
+    dll_main = "liballegro.so.5.0.10"
+    dll_acodec = "liballegro_acodec.so.5.0.10"
+    dll_audio = "liballegro_audio.so.5.0.10"
+    dll_color = "liballegro_color.so.5.0.10"
+    dll_dialog = "liballegro_dialog.so.5.0.10"
+    dll_font = "liballegro_font.so.5.0.10"
+    dll_image = "liballegro_image.so.5.0.10"
+    dll_memfile = "liballegro_memfile.so.5.0.10"
+    dll_physfs = "liballegro_physfs.so.5.0.10"
+    dll_primitives = "liballegro_primitives.so.5.0.10"
+    dll_ttf = "liballegro_ttf.so.5.0.10"
 
 #base.h
 const
