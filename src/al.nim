@@ -14,7 +14,17 @@ when defined(Linux):
 elif defined(Windows):
   import winlean
   const
-    dll_main = "allegro-5.0.10-mt.dll"
+    dll_main = "allegro-5.0.dll"
+    dll_acodec = "allegro_acodec-5.0.dll"
+    dll_font = "allegro_font-5.0.dll"
+    dll_image = "allegro_image-5.0.dll"
+    dll_primitives = "allegro_primitives-5.0.dll"
+    dll_audio = "allegro_audio-5.0.dll"
+    dll_color = "allegro_color-5.0.dll"
+    dll_dialog = "allegro_dialog-5.0.dll"
+    dll_memfile = "allegro_memfile-5.0.dll"
+    dll_physfs = "allegro_physfs-5.0.dll"
+    dll_ttf = "allegro_ttf-5.0.dll"
 
 #base.h
 const
@@ -23,9 +33,9 @@ const
   WIP_VERSION = 10
   RELEASE_NUMBER = 1
   
-  VERSION_STR = $VERSION & $SUB_VERSION & $WIP_VERSION
-  DATE_STR = "2013"
-  DATE = 20130616 # yyyymmdd
+  VERSION_STR* = $VERSION & $SUB_VERSION & $WIP_VERSION
+  DATE_STR* = "2013"
+  DATE* = 20130616 # yyyymmdd
   VERSION_INT: cint = (VERSION shl 24) or (SUB_VERSION shl 16) or
     (WIP_VERSION shl 8) or RELEASE_NUMBER
 
@@ -35,18 +45,18 @@ template `<<` (a,b: int{lit}): expr = a shl b
 # display.h
 #/* Possible bit combinations for the flags parameter of al_create_display. */
 const
-   ALLEGRO_WINDOWED                    = 1 << 0#,
-   ALLEGRO_FULLSCREEN                  = 1 << 1#,
-   ALLEGRO_OPENGL                      = 1 << 2#,
-   ALLEGRO_DIRECT3D_INTERNAL           = 1 << 3#,
-   ALLEGRO_RESIZABLE                   = 1 << 4#,
-   ALLEGRO_FRAMELESS                   = 1 << 5#,
-   ALLEGRO_NOFRAME                     = ALLEGRO_FRAMELESS#, /* older synonym */
-   ALLEGRO_GENERATE_EXPOSE_EVENTS      = 1 << 6#,
-   ALLEGRO_OPENGL_3_0                  = 1 << 7#,
-   ALLEGRO_OPENGL_FORWARD_COMPATIBLE   = 1 << 8#,
-   ALLEGRO_FULLSCREEN_WINDOW           = 1 << 9#,
-   ALLEGRO_MINIMIZED                   = 1 << 10
+   ALLEGRO_WINDOWED*                    = 1 << 0
+   ALLEGRO_FULLSCREEN*                  = 1 << 1
+   ALLEGRO_OPENGL*                      = 1 << 2
+   ALLEGRO_DIRECT3D_INTERNAL*           = 1 << 3
+   ALLEGRO_RESIZABLE*                   = 1 << 4
+   ALLEGRO_FRAMELESS*                   = 1 << 5
+   ALLEGRO_NOFRAME*                     = ALLEGRO_FRAMELESS
+   ALLEGRO_GENERATE_EXPOSE_EVENTS*      = 1 << 6
+   ALLEGRO_OPENGL_3_0*                  = 1 << 7
+   ALLEGRO_OPENGL_FORWARD_COMPATIBLE*   = 1 << 8
+   ALLEGRO_FULLSCREEN_WINDOW*           = 1 << 9
+   ALLEGRO_MINIMIZED*                   = 1 << 10
 
 #/* Possible parameters for al_set_display_option.
 # * Make sure to update ALLEGRO_EXTRA_DISPLAY_SETTINGS if you modify
@@ -88,9 +98,9 @@ type
    ALLEGRO_DISPLAY_OPTIONS_COUNT
 
 const
-   ALLEGRO_DONTCARE = 0
-   ALLEGRO_REQUIRE = 1
-   ALLEGRO_SUGGEST = 2
+   ALLEGRO_DONTCARE* = 0
+   ALLEGRO_REQUIRE* = 1
+   ALLEGRO_SUGGEST* = 2
 
 type ALLEGRO_DISPLAY_ORIENTATION* = enum
    ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES,
@@ -642,7 +652,7 @@ proc wait_for_vsync* : bool
 proc get_display_event_source* (D:PDisplay): PEventSource 
 
 proc set_window_position* (D:PDisplay; x,y: cint)
-proc get_window_position(D:PDisplay; x,y: var cint) 
+proc get_window_position*(D:PDisplay; x,y: var cint) 
 proc set_window_title* (D:PDisplay; title:cstring) 
 
 proc set_new_display_refresh_rate* (refreshRate:cint) 
@@ -672,7 +682,7 @@ proc get_new_window_position* (x,y:var cint)
 
 proc set_new_display_option*(option,value,importance:cint)
 proc get_new_display_option*(option:cint; importance:var cint):cint
-proc reset_new_display_options()
+proc reset_new_display_options*()
 proc get_display_option*(D:PDisplay; option:cint):cint
 
 proc hold_bitmap_drawing*(hold:bool)
@@ -850,7 +860,7 @@ proc cstr_dup* (us:USTR):cstring
 proc ustr_dup* (us:USTR): USTR
 proc ustr_dup_substr* (us:USTR; startPos,endPos:cint): USTR
 
-proc ustr_empty_string: USTR
+proc ustr_empty_string*: USTR
 proc ref_cstr* (info: PUstrInfo; s:cstring): USTR
 proc ref_buffer* (info:PUstrInfo; s:cstring; size:csize): USTR
 proc ref_ustr* (info:PUstrInfo; us:USTR; startPos,endPos:cint): USTR
@@ -1389,7 +1399,9 @@ proc systemFontDirectories* : seq[string] =
     result = @[ "/usr/share/fonts/TTF" ]  
   elif defined(MacOSX):
     result = @[ "/Libraries/Fonts" ]
-  elif defined(Windows) or true:
+  elif defined(Windows):
+    result = @[ "/Windows/Fonts" ]
+  else:
     raise newException(EIO, "Unknown operating system.")
   
 proc systemFont* (f: string, size: cint; flags = 0.cint): PFont =
