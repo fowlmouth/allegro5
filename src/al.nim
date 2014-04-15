@@ -1,43 +1,44 @@
+const verstring = "5.0"
 when defined(Windows):
   import windows
   const
-    dll_main = "allegro-5.0.dll"
-    dll_acodec = "allegro_acodec-5.0.dll"
-    dll_font = "allegro_font-5.0.dll"
-    dll_image = "allegro_image-5.0.dll"
-    dll_primitives = "allegro_primitives-5.0.dll"
-    dll_audio = "allegro_audio-5.0.dll"
-    dll_color = "allegro_color-5.0.dll"
-    dll_dialog = "allegro_dialog-5.0.dll"
-    dll_memfile = "allegro_memfile-5.0.dll"
-    dll_physfs = "allegro_physfs-5.0.dll"
-    dll_ttf = "allegro_ttf-5.0.dll"
+    dll_main = "allegro-" & verstring & ".dll"
+    dll_acodec = "allegro_acodec-" & verstring & ".dll"
+    dll_font = "allegro_font-" & verstring & ".dll"
+    dll_image = "allegro_image-" & verstring & ".dll"
+    dll_primitives = "allegro_primitives-" & verstring & ".dll"
+    dll_audio = "allegro_audio-" & verstring & ".dll"
+    dll_color = "allegro_color-" & verstring & ".dll"
+    dll_dialog = "allegro_dialog-" & verstring & ".dll"
+    dll_memfile = "allegro_memfile-" & verstring & ".dll"
+    dll_physfs = "allegro_physfs-" & verstring & ".dll"
+    dll_ttf = "allegro_ttf-" & verstring & ".dll"
 elif defined(MacOSX):
   const
-    dll_main = "liballegro.5.1.dylib"
-    dll_acodec = "liballegro_acodec.5.1.dylib"
-    dll_audio = "liballegro_audio.5.1.dylib"
-    dll_color = "liballegro_color.5.1.dylib"
-    dll_dialog = "liballegro_dialog.5.1.dylib"
-    dll_font = "liballegro_font.5.1.dylib"
-    dll_image = "liballegro_image.5.1.dylib"
-    dll_memfile = "liballegro_memfile.5.1.dylib"
-    dll_physfs = "liballegro_physfs.5.1.dylib"
-    dll_primitives = "liballegro_primitives.5.1.dylib"
-    dll_ttf = "liballegro_ttf.5.1.dylib"
+    dll_main = "liballegro." & verstring & ".dylib"
+    dll_acodec = "liballegro_acodec." & verstring & ".dylib"
+    dll_audio = "liballegro_audio." & verstring & ".dylib"
+    dll_color = "liballegro_color." & verstring & ".dylib"
+    dll_dialog = "liballegro_dialog." & verstring & ".dylib"
+    dll_font = "liballegro_font." & verstring & ".dylib"
+    dll_image = "liballegro_image." & verstring & ".dylib"
+    dll_memfile = "liballegro_memfile." & verstring & ".dylib"
+    dll_physfs = "liballegro_physfs." & verstring & ".dylib"
+    dll_primitives = "liballegro_primitives." & verstring & ".dylib"
+    dll_ttf = "liballegro_ttf.lib" & verstring
 else:
   const
-    dll_main = "liballegro.so.5.0.10"
-    dll_acodec = "liballegro_acodec.so.5.0.10"
-    dll_audio = "liballegro_audio.so.5.0.10"
-    dll_color = "liballegro_color.so.5.0.10"
-    dll_dialog = "liballegro_dialog.so.5.0.10"
-    dll_font = "liballegro_font.so.5.0.10"
-    dll_image = "liballegro_image.so.5.0.10"
-    dll_memfile = "liballegro_memfile.so.5.0.10"
-    dll_physfs = "liballegro_physfs.so.5.0.10"
-    dll_primitives = "liballegro_primitives.so.5.0.10"
-    dll_ttf = "liballegro_ttf.so.5.0.10"
+    dll_main = "liballegro.so." & verstring
+    dll_acodec = "liballegro_acodec.so." & verstring
+    dll_audio = "liballegro_audio.so." & verstring
+    dll_color = "liballegro_color.so." & verstring
+    dll_dialog = "liballegro_dialog.so." & verstring
+    dll_font = "liballegro_font.so." & verstring
+    dll_image = "liballegro_image.so." & verstring
+    dll_memfile = "liballegro_memfile.so." & verstring
+    dll_physfs = "liballegro_physfs.so." & verstring
+    dll_primitives = "liballegro_primitives.so." & verstring
+    dll_ttf = "liballegro_ttf.so." & verstring
 
 #base.h
 const
