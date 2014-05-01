@@ -489,6 +489,9 @@ type
   UStr* = ptr object
   PUstrInfo* = ptr object
 
+# allegro_audio.h
+type TPostprocessCB* = proc(buf:pointer; samples:cuint; data:pointer){.cdecl.}
+
 # allegro_font.h
 type
   PFont* = ptr object
@@ -916,6 +919,9 @@ type
   PlaymodeOnce = 0x100, PlaymodeLoop = 0x101,
   PlaymodeBidir = 0x102,PlaymodeStreamOnce = 0x103,
   PlaymodeStreamOnedir = 0x104
+ TMixerQuality*{.size:sizeof(cint).} = enum
+  MixerQualityPoint = 0x110, MixerQualityLinear = 0x111,
+  MixerQualityCubic = 0x112
  TSampleID* = object
   index,id:cint
  PMixer* = ptr object
@@ -975,76 +981,70 @@ proc stop_sample_instance* (sample:PSampleInstance): bool
 #/* Stream functions */
 proc create_audio_stream* (bufferCount:csize; samples,freq:cuint; 
         depth:TAudioDepth; channelConf:TChannelConf): PAudioStream
-# im bored
+proc destroy_audio_stream* (stream:PAudioStream)
+proc drain_audio_stream*
+
+proc get_audio_stream_frequency* (stream:PAudioStream): cuint
+proc get_audio_stream_length* (stream:PAudioStream): cuint
+proc get_audio_stream_fragments* (stream:PAudioStream): cuint
+proc get_available_audio_stream_fragments* (stream:PAudioStream): cuint
+
+proc get_audio_stream_speed*(stream:PAudioStream): cfloat
+proc get_audio_stream_gain* (stream:PAudioStream): cfloat
+proc get_audio_stream_pan* (stream:PAudioStream): cfloat
+
+proc get_audio_stream_channels*(s:PAudioStream): TChannelConf
+proc get_audio_stream_depth*(s:PAudioStream): TAudioDepth
+proc get_audio_stream_playmode*(s:PAudioStream): TPlaymode
+
+proc get_audio_stream_playing* (s:PAudioStream): bool
+proc get_audio_stream_attached*(s:PAudioStream): bool
+
+proc get_audio_stream_fragment* (s:PAudioStream): pointer
+
+proc set_audio_stream_speed* (s:PAudioStream; val:cfloat): bool
+proc set_audio_stream_gain* (s:PAudioStream; val:cfloat): bool
+proc set_audio_stream_pan* (s:PAudioStream; val:cfloat):bool
+
+proc set_audio_stream_playmode*(S:PAudioStream; val:TPlaymode):bool
+proc set_audio_stream_playing*(s:PAudiOStream; val: bool): bool
+proc detach_audio_stream*(s:PAudioStream): bool
+proc set_audio_stream_fragment* (S:PAudioStream; val: pointer): bool
+
+proc rewind_audio_stream* (s:PAudioStream): bool
+proc seek_audio_stream_secs*(s:PAudioStream; time:cdouble): bool
+proc get_audio_stream_position_secs* (S:PAudioStream): cdouble
+proc get_audio_stream_length_secs*(S:PAudioStream): cdouble
+proc set_audio_stream_loop_secs* (S:PAudioStream; start,`end`:cdouble): bool 
+
+proc get_audio_stream_event_source* (S:PAudioStream): PEventSource
+
+#/* Mixer functions */
+proc create_mixer* (freq:cuint, depth:TAudioDepth, chanConf:TChannelConf): PMixer
+proc destroy_mixer*(M:PMixer)
+proc attach_sample_instance_to_mixer* (stream:PSampleInstance; M:PMixer): bool
+proc attach_audio_stream_to_mixer* (stream:PAudioStream; M:PMixer): bool
+proc attach_mixer_to_mixer* (stream,m:PMixer):bool
+proc set_mixer_postprocess_callback* (M:PMixer; TPostprocessCB; data:pointer): bool
+
+proc get_mixer_frequency*(M:PMixer): cuint
+proc get_mixer_channels* (M:PMixer): TChannelConf
+proc get_mixer_depth*(M:PMixer): TAudioDepth
+proc get_mixer_quality*(M:PMixer): TMixerQuality
+proc get_mixer_gain* (M:PMixer): cfloat
+proc get_mixer_playing*(M:PMixer): bool
+proc get_mixer_attached*(M:PMixer): bool
+proc set_mixer_frequency*(M:PMixer; freq:cuint):bool
+proc set_mixer_quality* (M:PMixer; val:TMixerQuality): bool
+proc set_mixer_gain* (M:PMixer; gain:cfloat): bool
+proc set_mixer_playing*(M:PMixer; val:bool): bool
+proc detach_mixer*(M:PMixer): bool
+
+#/* Voice functions */
+
 discard """
-ALLEGRO_KCM_AUDIO_FUNC(void, al_destroy_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(void, al_drain_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
 
-ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_frequency, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_length, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_audio_stream_fragments, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_available_audio_stream_fragments, (const ALLEGRO_AUDIO_STREAM *stream));
 
-ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_speed, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_gain, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(float, al_get_audio_stream_pan, (const ALLEGRO_AUDIO_STREAM *stream));
-
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_CHANNEL_CONF, al_get_audio_stream_channels, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_AUDIO_DEPTH, al_get_audio_stream_depth, (const ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_PLAYMODE, al_get_audio_stream_playmode, (const ALLEGRO_AUDIO_STREAM *stream));
-
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_audio_stream_playing, (const ALLEGRO_AUDIO_STREAM *spl));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_audio_stream_attached, (const ALLEGRO_AUDIO_STREAM *spl));
-
-ALLEGRO_KCM_AUDIO_FUNC(void *, al_get_audio_stream_fragment, (const ALLEGRO_AUDIO_STREAM *stream));
-
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_speed, (ALLEGRO_AUDIO_STREAM *stream, float val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_gain, (ALLEGRO_AUDIO_STREAM *stream, float val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_pan, (ALLEGRO_AUDIO_STREAM *stream, float val));
-
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_playmode, (ALLEGRO_AUDIO_STREAM *stream, ALLEGRO_PLAYMODE val));
-
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_playing, (ALLEGRO_AUDIO_STREAM *stream, bool val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_detach_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_fragment, (ALLEGRO_AUDIO_STREAM *stream, void *val));
-
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_rewind_audio_stream, (ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_seek_audio_stream_secs, (ALLEGRO_AUDIO_STREAM *stream, double time));
-ALLEGRO_KCM_AUDIO_FUNC(double, al_get_audio_stream_position_secs, (ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(double, al_get_audio_stream_length_secs, (ALLEGRO_AUDIO_STREAM *stream));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_audio_stream_loop_secs, (ALLEGRO_AUDIO_STREAM *stream, double start, double end));
-
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_audio_stream_event_source, (ALLEGRO_AUDIO_STREAM *stream));
-
-/* Mixer functions */
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_MIXER*, al_create_mixer, (unsigned int freq,
-      ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF chan_conf));
-ALLEGRO_KCM_AUDIO_FUNC(void, al_destroy_mixer, (ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_sample_instance_to_mixer, (
-   ALLEGRO_SAMPLE_INSTANCE *stream, ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_audio_stream_to_mixer, (ALLEGRO_AUDIO_STREAM *stream,
-   ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_attach_mixer_to_mixer, (ALLEGRO_MIXER *stream,
-   ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_postprocess_callback, (
-      ALLEGRO_MIXER *mixer,
-      void (*cb)(void *buf, unsigned int samples, void *data),
-      void *data));
-
-ALLEGRO_KCM_AUDIO_FUNC(unsigned int, al_get_mixer_frequency, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_CHANNEL_CONF, al_get_mixer_channels, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_AUDIO_DEPTH, al_get_mixer_depth, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_MIXER_QUALITY, al_get_mixer_quality, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(float, al_get_mixer_gain, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_mixer_playing, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_get_mixer_attached, (const ALLEGRO_MIXER *mixer));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_frequency, (ALLEGRO_MIXER *mixer, unsigned int val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_quality, (ALLEGRO_MIXER *mixer, ALLEGRO_MIXER_QUALITY val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_gain, (ALLEGRO_MIXER *mixer, float gain));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_set_mixer_playing, (ALLEGRO_MIXER *mixer, bool val));
-ALLEGRO_KCM_AUDIO_FUNC(bool, al_detach_mixer, (ALLEGRO_MIXER *mixer));
-
-/* Voice functions */
 ALLEGRO_KCM_AUDIO_FUNC(ALLEGRO_VOICE*, al_create_voice, (unsigned int freq,
       ALLEGRO_AUDIO_DEPTH depth,
       ALLEGRO_CHANNEL_CONF chan_conf));
