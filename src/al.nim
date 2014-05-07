@@ -306,6 +306,10 @@ type
 # timer.h
 type PTimer* = ptr object
 
+# tls.h
+type TState* = object
+  pad: array[1024, char]
+
 
 #events.h
 type 
@@ -851,6 +855,9 @@ proc get_timer_event_source*(T:PTimer):PEventSource
 
 # tls.h
 ## TODO with threads.h
+proc store_state* (state: ptr TState; flags: cint)
+proc restore_state*(state: ptr TState)
+
 
 # transformations.h
 proc use_transform* (trans:PTransform)
