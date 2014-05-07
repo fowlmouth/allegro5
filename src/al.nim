@@ -309,7 +309,16 @@ type PTimer* = ptr object
 # tls.h
 type TState* = object
   pad: array[1024, char]
-
+const
+  State_NewDisplayParameters* = 0x0001
+  State_NewBitmapParameters* = 0x0002
+  State_Display* = 0x0004
+  State_TargetBitmap* = 0x0008
+  State_Blender* = 0x0010
+  State_NewFileInterface* = 0x0020
+  State_Transform* = 0x0040
+  State_Bitmap* = State_TargetBitmap + State_NewBitmapParameters
+  State_ALL* = 0xFFFF
 
 #events.h
 type 
