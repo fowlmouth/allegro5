@@ -461,6 +461,12 @@ type
   TColor* = object{.pure.}
     r*,g*,b*,a*: cfloat
 
+# config.h
+type 
+  PConfig* = ptr object ## ALLEGRO_CONFIG *
+  PConfigSection* = ptr object
+  PConfigEntry* = ptr object
+
 # file.h
 type PFile* = ptr object
 
@@ -661,6 +667,25 @@ proc get_pixel_format_bits*(format:cint):cint
 
 # config.h
 ## TODO
+
+
+proc create_config* : PConfig
+proc add_config_section* (cfg:PConfig; name:cstring) 
+proc set_config_value* (cfg:PConfig; section,key,value:cstring)
+proc add_config_comment*(cfg:PConfig; section,comment:cstring)
+proc get_config_value* (cfg:PConfig; section,key:cstring): cstring
+proc load_config_file* (filename:cstring): PConfig
+proc load_config_file_f*(file: al.PFile): PConfig
+proc save_config_file* (filename:cstring; config: PConfig): bool
+proc save_config_file_f*(file: al.PFile; config: PConfig): bool
+proc merge_config_into* (master,add: PConfig)
+proc merge_config* (cfg1,cfg2: PConfig): PConfig
+proc destroy_config*(cfg:PConfig)
+
+proc get_first_config_section* (cfg:PConfig; iter:var PConfigSection): cstring
+proc get_next_config_section* (iter:PConfigSection): cstring
+proc get_first_config_entry* (cfg:PConfig; section:cstring; iter:var PConfigEntry): cstring
+proc get_next_config_entry* (iter:PConfigEntry): cstring
 
 
 
