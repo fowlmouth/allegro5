@@ -534,6 +534,22 @@ type
   PathResources, PathTemp, PathUserData, PathUserHome, PathUserSettings,
   PathUserDocuments, PathExename
 
+# threads.h
+
+# Type: ALLEGRO_THREAD
+# 
+# Type: ALLEGRO_MUTEX
+# 
+# Type: ALLEGRO_COND
+# 
+type 
+  TTHREAD* = object
+  TMUTEX* = object
+  TCOND* = object
+
+type TThreadFunc* = proc (thread: ptr TTHREAD; arg: pointer): pointer{.cdecl.}
+type TDetachedThreadFunc* = proc (arg: pointer): pointer{.cdecl.}
+
 # transformations.h
 type 
  PTransform* = var TTransform
@@ -995,8 +1011,26 @@ proc get_org_name* : cstring
 proc get_app_name* : cstring
 proc inhibit_screensaver* (inhibit:bool): bool
 
-# thread.h
-## TODO on request
+# threads.h
+proc create_thread*(`proc`: TThreadFunc; 
+                    arg: pointer): ptr TTHREAD
+proc start_thread*(outer: ptr TTHREAD)
+proc join_thread*(outer: ptr TTHREAD; ret_value: ptr pointer)
+proc set_thread_should_stop*(outer: ptr TTHREAD)
+proc get_thread_should_stop*(outer: ptr TTHREAD): bool
+proc destroy_thread*(thread: ptr TTHREAD)
+proc run_detached_thread*(`proc`: TDetachedThreadFunc; arg: pointer)
+proc create_mutex*(): ptr TMUTEX
+proc create_mutex_recursive*(): ptr TMUTEX
+proc lock_mutex*(mutex: ptr TMUTEX)
+proc unlock_mutex*(mutex: ptr TMUTEX)
+proc destroy_mutex*(mutex: ptr TMUTEX)
+proc create_cond*(): ptr TCOND
+proc destroy_cond*(cond: ptr TCOND)
+proc wait_cond*(cond: ptr TCOND; mutex: ptr TMUTEX)
+proc wait_cond_until*(cond: ptr TCOND; mutex: ptr TMUTEX; timeout: ptr TTIMEOUT): cint
+proc broadcast_cond*(cond: ptr TCOND)
+proc signal_cond*(cond: ptr TCOND)
 
 # timer.h
 proc create_timer* (seconds: cdouble) : PTimer
