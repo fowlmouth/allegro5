@@ -500,6 +500,16 @@ type
   TDisplayMode* = object
     width*,height*,format*,refreshRate*:cint
 
+# memory.h
+type 
+  TMemoryInterface* = object 
+    mi_malloc*: proc (n: csize; line: cint; file: cstring; func: cstring): pointer
+    mi_free*: proc (`ptr`: pointer; line: cint; file: cstring; func: cstring)
+    mi_realloc*: proc (`ptr`: pointer; n: csize; line: cint; file: cstring; 
+                       func: cstring): pointer
+    mi_calloc*: proc (count: csize; n: csize; line: cint; file: cstring; 
+                      func: cstring): pointer
+
 # monitor.h
 type TMonitorInfo* = object
   x1*,y1*,x2*,y2*:cint
@@ -886,7 +896,34 @@ proc get_joystick_event_source* : PEventSource
 
 
 # memory.h
-## TODO wrap when someone requests it
+proc set_memory_interface*(iface: ptr TMemoryInterface)
+when false:
+  # Function: al_malloc
+  # 
+  template malloc*(n: expr): expr = 
+    #(malloc_with_context((n), __LINE__, __FILE__, __func__))
+
+  # Function: al_free
+  # 
+  template free*(p: expr): expr = 
+    #(free_with_context((p), __LINE__, __FILE__, __func__))
+
+  # Function: al_realloc
+  # 
+  template realloc*(p, n: expr): expr = 
+    #(realloc_with_context((p), (n), __LINE__, __FILE__, __func__))
+
+  # Function: al_calloc
+  # 
+  template calloc*(c, n: expr): expr = 
+    #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
+
+proc malloc_with_context*(n: csize; line: cint; file: cstring; func: cstring): pointer
+proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; func: cstring)
+proc realloc_with_context*(`ptr`: pointer; n: csize; line: cint; file: cstring; 
+                           func: cstring): pointer
+proc calloc_with_context*(count: csize; n: csize; line: cint; file: cstring; 
+                          func: cstring): pointer
 
 # monitor.h
 proc get_num_video_adapters* : cint
