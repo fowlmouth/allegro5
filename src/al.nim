@@ -490,6 +490,9 @@ type TSystemMouseCursor* {.size:sizeof(cint).} = enum
   SysCursorResizeNE, SysCursorProgress, SysCursorPrecision,
   SysCursorLink, SysCursorAltSelect, SysCursorUnavailable
 
+# path.h
+type TPath* = object{.incompleteStruct.}
+
 # system.h
 type
  TAtExitFunc * = proc: cint {.cdecl.} 
@@ -666,9 +669,6 @@ proc get_pixel_size*(format:cint):cint
 proc get_pixel_format_bits*(format:cint):cint 
 
 # config.h
-## TODO
-
-
 proc create_config* : PConfig
 proc add_config_section* (cfg:PConfig; name:cstring) 
 proc set_config_value* (cfg:PConfig; section,key,value:cstring)
@@ -774,6 +774,7 @@ proc wait_for_event_timed*(Q:PEventQueue; result:var TEvent; secs:cfloat): bool
 proc wait_for_event_until*(Q:PEventQueue; result:var TEvent; timeout:var TTimeout):bool
 
 # file.h
+
 ## TODO
 
 
@@ -855,7 +856,29 @@ proc show_mouse_cursor* (D:PDisplay)
 proc hide_mouse_cursor* (D:PDisplay)
 
 # path.h
-## TODO this is an ugly module, only wrap it if its used anywhere else
+proc create_path*(str: cstring): ptr TPATH
+proc create_path_for_directory*(str: cstring): ptr TPATH
+proc clone_path*(path: ptr TPATH): ptr TPATH
+proc get_path_num_components*(path: ptr TPATH): cint
+proc get_path_component*(path: ptr TPATH; i: cint): cstring
+proc replace_path_component*(path: ptr TPATH; i: cint; s: cstring)
+proc remove_path_component*(path: ptr TPATH; i: cint)
+proc insert_path_component*(path: ptr TPATH; i: cint; s: cstring)
+proc get_path_tail*(path: ptr TPATH): cstring
+proc drop_path_tail*(path: ptr TPATH)
+proc append_path_component*(path: ptr TPATH; s: cstring)
+proc join_paths*(path: ptr TPATH; tail: ptr TPATH): bool
+proc rebase_path*(head: ptr TPATH; tail: ptr TPATH): bool
+proc path_cstr*(path: ptr TPATH; delim: char): cstring
+proc destroy_path*(path: ptr TPATH)
+proc set_path_drive*(path: ptr TPATH; drive: cstring)
+proc get_path_drive*(path: ptr TPATH): cstring
+proc set_path_filename*(path: ptr TPATH; filename: cstring)
+proc get_path_filename*(path: ptr TPATH): cstring
+proc get_path_extension*(path: ptr TPATH): cstring
+proc set_path_extension*(path: ptr TPATH; extension: cstring): bool
+proc get_path_basename*(path: ptr TPATH): cstring
+proc make_path_canonical*(path: ptr TPATH): bool
 
 # system.h
 proc install_system* (version: cint, atExitPTR: TAtExitFunc): bool {.discardable.}
