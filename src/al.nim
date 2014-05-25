@@ -469,6 +469,30 @@ type
 
 # file.h
 type PFile* = ptr object
+type C_off_t* {.importc:"off_t".} = int64
+# Type: ALLEGRO_FILE
+# 
+# Type: ALLEGRO_FILE_INTERFACE
+# 
+type 
+  TFileInterface* = object 
+    fi_fopen*: proc (path: cstring; mode: cstring): pointer
+    fi_fclose*: proc (handle: PFile)
+    fi_fread*: proc (f: PFile; `ptr`: pointer; size: csize): csize
+    fi_fwrite*: proc (f: PFile; `ptr`: pointer; size: csize): csize
+    fi_fflush*: proc (f: PFile): bool
+    fi_ftell*: proc (f: PFile): int64
+    fi_fseek*: proc (f: PFile; offset: int64; whence: cint): bool
+    fi_feof*: proc (f: PFile): bool
+    fi_ferror*: proc (f: PFile): bool
+    fi_fclearerr*: proc (f: PFile)
+    fi_fungetc*: proc (f: PFile; c: cint): cint
+    fi_fsize*: proc (f: PFile): c_off_t
+# Enum: ALLEGRO_SEEK
+type 
+  ALLEGRO_SEEK* {.size: sizeof(cint).} = enum 
+    ALLEGRO_SEEK_SET = 0, ALLEGRO_SEEK_CUR, ALLEGRO_SEEK_END
+
 
 # fullscreen_mode.h
 type
@@ -775,7 +799,47 @@ proc wait_for_event_until*(Q:PEventQueue; result:var TEvent; timeout:var TTimeou
 
 # file.h
 
-## TODO
+# The basic operations. 
+proc fopen*(path: cstring; mode: cstring): PFile
+proc fopen_interface*(vt: ptr TFileInterface; path: cstring; 
+                         mode: cstring): PFile
+proc create_file_handle*(vt: ptr TFileInterface; userdata: pointer): PFile
+proc fclose*(f: PFile)
+proc fread*(f: PFile; `ptr`: pointer; size: csize): csize
+proc fwrite*(f: PFile; `ptr`: pointer; size: csize): csize
+proc fflush*(f: PFile): bool
+proc ftell*(f: PFile): int64
+proc fseek*(f: PFile; offset: int64; whence: cint): bool
+proc feof*(f: PFile): bool
+proc ferror*(f: PFile): bool
+proc fclearerr*(f: PFile)
+proc fungetc*(f: PFile; c: cint): cint
+proc fsize*(f: PFile): int64
+# Convenience functions. 
+proc fgetc*(f: PFile): cint
+proc fputc*(f: PFile; c: cint): cint
+proc fread16le*(f: PFile): int16
+proc fread16be*(f: PFile): int16
+proc fwrite16le*(f: PFile; w: int16): csize
+proc fwrite16be*(f: PFile; w: int16): csize
+proc fread32le*(f: PFile): int32
+proc fread32be*(f: PFile): int32
+proc fwrite32le*(f: PFile; l: int32): csize
+proc fwrite32be*(f: PFile; l: int32): csize
+proc fgets*(f: PFile; p: cstring; max: csize): cstring
+proc fget_ustr*(f: PFile): USTR
+proc fputs*(f: PFile; p: cstring): cint
+# Specific to stdio backend. 
+proc fopen_fd*(fd: cint; mode: cstring): PFile
+proc make_temp_file*(tmpl: cstring; ret_path: ptr TPATH): PFile
+# Specific to slices. 
+proc fopen_slice*(fp: PFile; initial_size: csize; mode: cstring): PFile
+# Thread-local state. 
+proc get_new_file_interface*(): ptr TFileInterface
+proc set_new_file_interface*(file_interface: ptr TFileInterface)
+proc set_standard_file_interface*()
+# ALLEGRO_FILE field accessors 
+proc get_file_userdata*(f: PFile): pointer
 
 
 # fullscreen_mode.h
