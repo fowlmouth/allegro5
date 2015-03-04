@@ -487,7 +487,7 @@ type
     fi_ferror*: proc (f: PFile): bool
     fi_fclearerr*: proc (f: PFile)
     fi_fungetc*: proc (f: PFile; c: cint): cint
-    fi_fsize*: proc (f: PFile): c_off_t
+    fi_fsize*: proc (f: PFile): C_off_t
 # Enum: ALLEGRO_SEEK
 type 
   ALLEGRO_SEEK* {.size: sizeof(cint).} = enum 
@@ -503,12 +503,12 @@ type
 # memory.h
 type 
   TMemoryInterface* = object 
-    mi_malloc*: proc (n: csize; line: cint; file: cstring; func: cstring): pointer
-    mi_free*: proc (`ptr`: pointer; line: cint; file: cstring; func: cstring)
+    mi_malloc*: proc (n: csize; line: cint; file: cstring; fun: cstring): pointer
+    mi_free*: proc (`ptr`: pointer; line: cint; file: cstring; fun: cstring)
     mi_realloc*: proc (`ptr`: pointer; n: csize; line: cint; file: cstring; 
-                       func: cstring): pointer
+                       fun: cstring): pointer
     mi_calloc*: proc (count: csize; n: csize; line: cint; file: cstring; 
-                      func: cstring): pointer
+                      fun: cstring): pointer
 
 # monitor.h
 type TMonitorInfo* = object
@@ -934,12 +934,12 @@ when false:
   template calloc*(c, n: expr): expr = 
     #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
 
-proc malloc_with_context*(n: csize; line: cint; file: cstring; func: cstring): pointer
-proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; func: cstring)
+proc malloc_with_context*(n: csize; line: cint; file: cstring; fun: cstring): pointer
+proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; fun: cstring)
 proc realloc_with_context*(`ptr`: pointer; n: csize; line: cint; file: cstring; 
-                           func: cstring): pointer
+                           fun: cstring): pointer
 proc calloc_with_context*(count: csize; n: csize; line: cint; file: cstring; 
-                          func: cstring): pointer
+                          fun: cstring): pointer
 
 # monitor.h
 proc get_num_video_adapters* : cint
@@ -1584,11 +1584,11 @@ template al_main* (body:stmt):stmt =
   discard run_main(0, nil, proc(argc:cint; argv:cstringarray):cint{.cdecl.} =
     body
   )
-template al_main* [T] (arg:T; func:proc(arg:T){.nimcall.}): stmt =
+template al_main* [T] (arg:T; fun:proc(arg:T){.nimcall.}): stmt =
   ## Wrap code for al_run_main and pass an argument along
   block:
-    type TBlah = tuple[f: type(func), x: type(arg)]
-    var hax: TBlah = (func,arg)
+    type TBlah = tuple[f: type(fun), x: type(arg)]
+    var hax: TBlah = (fun,arg)
     discard al.run_main(0, cast[cstringarray](hax.addr)) do (argc:cint;argv:cstringarray)->cint{.cdecl.}:
       let hax = cast[ptr TBlah](argv)
       hax.f hax.x
