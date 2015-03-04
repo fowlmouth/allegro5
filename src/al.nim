@@ -1504,13 +1504,13 @@ proc get_allegro_ttf_version*:uint32
 
 
 # bitmap
-proc destroy* (B:PBitmap) {.inline.}=
+proc destroy* (b:PBitmap) {.inline.}=
   b.destroyBitmap
-proc get_width* (B:PBitmap):cint {.inline.} =
+proc get_width* (b:PBitmap):cint {.inline.} =
   b.getBitmapWidth
-proc get_height*(B:PBitmap):cint{.inline.}=
+proc get_height*(b:PBitmap):cint{.inline.}=
  b.getBitmapHeight
-proc get_size* (B:PBitmap): tuple[w,h: cint] {.inline.} =
+proc get_size* (b:PBitmap): tuple[w,h: cint] {.inline.} =
   (b.getWidth, b.getHeight)
 
 # display
@@ -1522,16 +1522,16 @@ proc get_width*(D:PDisplay):cint {.inline.} =
   D.get_display_width
 proc get_height*(D:PDisplay):cint {.inline.}=
   D.get_display_height
-proc get_size* (D:PDisplay): tuple[w,h:cint] =
+proc get_size* (d:PDisplay): tuple[w,h:cint] =
   result.w = d.get_display_width
   result.h = d.get_display_height
 
 
 # event queue
-proc destroy* (Q:PEventQueue) {.inline.} =
+proc destroy* (q:PEventQueue) {.inline.} =
   q.destroy_eventqueue
-proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=
-  Q.registerEventSource(SRC)
+proc register*(q:PEventQueue; src:PEventSource){.inline.}=
+  q.registerEventSource(src)
 
 
 # keyboard
@@ -1560,7 +1560,7 @@ proc eventSource*(T:PTimer):PEventSource{.inline.}=T.getTimerEventSource
 
 # transform
 proc use* (T:PTransform) {.inline.} = T.use_transform
-proc copy*(Dest,Src:PTransform) {.inline.}= dest.copyTransform(src)
+proc copy*(dest,src:PTransform) {.inline.}= dest.copyTransform(src)
 proc identity*(T:PTransform) {.inline.} = T.identityTransform
 proc build*(T:PTransform; x,y,sw,sy,theta:cfloat) {.inline.} = T.buildTransform(x,y,sw,sy,theta)
 proc translate*(T:PTransform; x,y:cfloat){.inline.} = T.translateTransform(x,y)
