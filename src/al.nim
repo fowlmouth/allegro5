@@ -850,8 +850,8 @@ proc fwrite16le*(f: PFile; w: int16): csize
 proc fwrite16be*(f: PFile; w: int16): csize
 proc fread32le*(f: PFile): int32
 proc fread32be*(f: PFile): int32
-proc fwrite32le*(f: PFile; l: int32): csize
-proc fwrite32be*(f: PFile; l: int32): csize
+proc fwrite32le*(f: PFile; size: int32): csize
+proc fwrite32be*(f: PFile; size: int32): csize
 proc fgets*(f: PFile; p: cstring; max: csize): cstring
 proc fget_ustr*(f: PFile): USTR
 proc fputs*(f: PFile; p: cstring): cint
@@ -1225,7 +1225,7 @@ proc destroy_mixer*(M:PMixer)
 proc attach_sample_instance_to_mixer* (stream:PSampleInstance; M:PMixer): bool
 proc attach_audio_stream_to_mixer* (stream:PAudioStream; M:PMixer): bool
 proc attach_mixer_to_mixer* (stream,m:PMixer):bool
-proc set_mixer_postprocess_callback* (M:PMixer; TPostprocessCB; data:pointer): bool
+proc set_mixer_postprocess_callback* (M:PMixer; postProcess:TPostprocessCB; data:pointer): bool
 
 proc get_mixer_frequency*(M:PMixer): cuint
 proc get_mixer_channels* (M:PMixer): TChannelConf
