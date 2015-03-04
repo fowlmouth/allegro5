@@ -913,26 +913,27 @@ proc get_joystick_event_source* : PEventSource
 
 # memory.h
 proc set_memory_interface*(iface: ptr TMemoryInterface)
-when false:
-  # Function: al_malloc
-  # 
-  template malloc*(n: expr): expr = 
-    #(malloc_with_context((n), __LINE__, __FILE__, __func__))
 
-  # Function: al_free
-  # 
-  template free*(p: expr): expr = 
-    #(free_with_context((p), __LINE__, __FILE__, __func__))
+# currently no nim equivalent of __LINE__, __FILE__, __func__
+## Function: al_malloc
+# 
+#template malloc*(n: expr): expr = 
+  #(malloc_with_context((n), __LINE__, __FILE__, __func__))
 
-  # Function: al_realloc
-  # 
-  template realloc*(p, n: expr): expr = 
-    #(realloc_with_context((p), (n), __LINE__, __FILE__, __func__))
+## Function: al_free
+# 
+#template free*(p: expr): expr = 
+  #(free_with_context((p), __LINE__, __FILE__, __func__))
 
-  # Function: al_calloc
-  # 
-  template calloc*(c, n: expr): expr = 
-    #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
+## Function: al_realloc
+# 
+#template realloc*(p, n: expr): expr = 
+  #(realloc_with_context((p), (n), __LINE__, __FILE__, __func__))
+
+## Function: al_calloc
+# 
+#template calloc*(c, n: expr): expr = 
+  #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
 
 proc malloc_with_context*(n: csize; line: cint; file: cstring; fun: cstring): pointer
 proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; fun: cstring)
