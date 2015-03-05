@@ -1,3 +1,4 @@
+
 const verstring = "5.0"
 when defined(Windows):
   import windows
@@ -77,7 +78,7 @@ const
 # * anything here.
 # */
 type
-  TDisplayOptions* = enum 
+  DisplayOptions* = enum 
    ALLEGRO_RED_SIZE,
    ALLEGRO_GREEN_SIZE,
    ALLEGRO_BLUE_SIZE,
@@ -299,7 +300,8 @@ type
   TJoystickState* = object
     stick*: array[MaxJoystickSticks, tuple[axis: array[MaxJoystickAxes, cfloat]]]
     button*: array[MaxJoystickButtons, cint] 
-  TJoyFlags* = enum JoyFlag_Digital = 0x01, JoyFlag_Analogue = 0x02
+  TJoyFlags* = enum 
+    JoyFlag_Digital = 0x01, JoyFlag_Analogue = 0x02
 
   PJoystick* = ptr object
 
@@ -469,7 +471,7 @@ type
 
 # file.h
 type PFile* = ptr object
-type C_off_t* {.importc:"off_t".} = int64
+type off_t* {.importc:"off_t".} = int64
 # Type: ALLEGRO_FILE
 # 
 # Type: ALLEGRO_FILE_INTERFACE
@@ -487,7 +489,7 @@ type
     fi_ferror*: proc (f: PFile): bool
     fi_fclearerr*: proc (f: PFile)
     fi_fungetc*: proc (f: PFile; c: cint): cint
-    fi_fsize*: proc (f: PFile): C_off_t
+    fi_fsize*: proc (f: PFile): off_t
 # Enum: ALLEGRO_SEEK
 type 
   ALLEGRO_SEEK* {.size: sizeof(cint).} = enum 
@@ -1652,4 +1654,72 @@ proc installEverything*: bool=
   i joystick
   i mouse
 
+when false:
+ {.deprecated: [
+  TDisplayOptions: DisplayOptions,
+  PKeyboard: KeyboardPtr,
+  TKeyboardState: KeyboardStateObj,
+  PMouse: MousePtr,
+  TMouseState: MouseStateObj,
+  PJoystick: JoystickPtr,
+  TJoystickState: JoystickStateObj,
+  TJoyFlags: JoyFlags,
+  PTimer: TimerPtr,
+  TState: StateObj,
+  TEventType: EventType,
+  TEventSource: EventSourceObj,
+  PEventSource: EventSourcePtr,
+  TAnyEvent: AnyEventObj,
+  TDisplayEvent: DisplayEventObj,
+  TJoystickEvent: JoystickEventObj,
+  TKeyboardEvent: KeyboardEventObj,
+  TMouseEvent: MouseEventObj,
+  TTimerEvent: TimerEventObj,
+  TUserEvent: UserEventObj,
+  PEventQueue: EventQueuePtr,
+  TTimeout: TimeoutObj,
+  TBitmapFlag: BitmapFlag,
+  TLockMode: LockMode,
+  PLockedRegion: LockedRegionPtr,
+  TLockedRegion: LockedRegionObj,
+  TBlendMode: BlendMode,
+  TBlendOp: BlendOp,
+  TColor: ColorObj,
+  PConfig: ConfigPtr,
+  PConfigSection: ConfigSectionPtr,
+  PConfigEntry: ConfigEntryPtr,
+  PFile: FilePtr,
+  C_off_t: off_t,
+  TFileInterface: FileInterfaceObj,
+  PDisplayMode: DisplayModePtr,
+  TDisplayMode: DisplayModeObj,
+  TMemoryInterface: MemoryInterfaceObj,
+  TMonitorInfo: MonitorInfoObj,
+  PMouseCursor: MouseCursorPtr,
+  TSystemMouseCursor: SystemMouseCursor,
+  TPath: PathObj,
+  TAtExitFunc: AtExitFunc,
+  TStandardPath: StandardPath,
+  TTHREAD: ThreadObj,
+  TMUTEX: MutexObj,
+  TCOND: CondObj,
+  TThreadFunc: ThreadFunc,
+  TDetachedThreadFunc: DetachedThreadFunc,
+  PTransform: TransformRef,
+  TTransform: TransformObj,
+  PUstrInfo: UstrInfoPtr,
+  TPostprocessCB: PostprocessCB,
+  PFont: FontPtr,
+  TFontLoader: FontLoaderFunc,
+  TPrimitiveType: PrimitiveType,
 
+  TAudioDepth: AudioDepth,
+  TChannelConf: ChannelConf,
+  TPlaymode: Playmode,
+  TMixerQuality: MixerQuality,
+  TSampleID: SampleIdObj,
+  PMixer: MixerPtr,
+  PSample: SamplePtr,
+  PSampleInstance: SampleInstancePtr,
+  PAudioStream: AudioStreamPtr,
+ ].}
