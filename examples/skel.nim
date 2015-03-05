@@ -16,7 +16,7 @@ al_main:
     queue = createEventQueue()
     font = systemFont("VeraMono.ttf", 46)
   
-  queue.registerEventSource display.EventSource
+  queue.registerEventSource display.eventSource
   queue.registerEventSource drawTimer.eventSource
   queue.registerEventSource getMouseEventSource()
   queue.register getKeyboardEventSource()
@@ -40,17 +40,17 @@ al_main:
     queue.waitForEvent ev
     
     case ev.kind
-    of eventTimer:
+    of EventTimer:
       if ev.timer.source == drawTimer.eventSource:
         redraw()
         
     
-    of eventDisplayClose:
+    of EventDisplayClose:
       break
     
-    of eventKeyDown:
+    of EventKeyDown:
       
-      if ev.keyboard.keycode == keyEscape:
+      if ev.keyboard.keycode == KeyEscape:
         break
 
     else:

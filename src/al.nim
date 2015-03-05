@@ -487,7 +487,7 @@ type
     fi_ferror*: proc (f: PFile): bool
     fi_fclearerr*: proc (f: PFile)
     fi_fungetc*: proc (f: PFile; c: cint): cint
-    fi_fsize*: proc (f: PFile): c_off_t
+    fi_fsize*: proc (f: PFile): C_off_t
 # Enum: ALLEGRO_SEEK
 type 
   ALLEGRO_SEEK* {.size: sizeof(cint).} = enum 
@@ -503,12 +503,12 @@ type
 # memory.h
 type 
   TMemoryInterface* = object 
-    mi_malloc*: proc (n: csize; line: cint; file: cstring; func: cstring): pointer
-    mi_free*: proc (`ptr`: pointer; line: cint; file: cstring; func: cstring)
+    mi_malloc*: proc (n: csize; line: cint; file: cstring; fun: cstring): pointer
+    mi_free*: proc (`ptr`: pointer; line: cint; file: cstring; fun: cstring)
     mi_realloc*: proc (`ptr`: pointer; n: csize; line: cint; file: cstring; 
-                       func: cstring): pointer
+                       fun: cstring): pointer
     mi_calloc*: proc (count: csize; n: csize; line: cint; file: cstring; 
-                      func: cstring): pointer
+                      fun: cstring): pointer
 
 # monitor.h
 type TMonitorInfo* = object
@@ -850,8 +850,8 @@ proc fwrite16le*(f: PFile; w: int16): csize
 proc fwrite16be*(f: PFile; w: int16): csize
 proc fread32le*(f: PFile): int32
 proc fread32be*(f: PFile): int32
-proc fwrite32le*(f: PFile; l: int32): csize
-proc fwrite32be*(f: PFile; l: int32): csize
+proc fwrite32le*(f: PFile; size: int32): csize
+proc fwrite32be*(f: PFile; size: int32): csize
 proc fgets*(f: PFile; p: cstring; max: csize): cstring
 proc fget_ustr*(f: PFile): USTR
 proc fputs*(f: PFile; p: cstring): cint
@@ -913,33 +913,34 @@ proc get_joystick_event_source* : PEventSource
 
 # memory.h
 proc set_memory_interface*(iface: ptr TMemoryInterface)
-when false:
-  # Function: al_malloc
-  # 
-  template malloc*(n: expr): expr = 
-    #(malloc_with_context((n), __LINE__, __FILE__, __func__))
 
-  # Function: al_free
-  # 
-  template free*(p: expr): expr = 
-    #(free_with_context((p), __LINE__, __FILE__, __func__))
+# currently no nim equivalent of __LINE__, __FILE__, __func__
+## Function: al_malloc
+# 
+#template malloc*(n: expr): expr = 
+  #(malloc_with_context((n), __LINE__, __FILE__, __func__))
 
-  # Function: al_realloc
-  # 
-  template realloc*(p, n: expr): expr = 
-    #(realloc_with_context((p), (n), __LINE__, __FILE__, __func__))
+## Function: al_free
+# 
+#template free*(p: expr): expr = 
+  #(free_with_context((p), __LINE__, __FILE__, __func__))
 
-  # Function: al_calloc
-  # 
-  template calloc*(c, n: expr): expr = 
-    #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
+## Function: al_realloc
+# 
+#template realloc*(p, n: expr): expr = 
+  #(realloc_with_context((p), (n), __LINE__, __FILE__, __func__))
 
-proc malloc_with_context*(n: csize; line: cint; file: cstring; func: cstring): pointer
-proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; func: cstring)
+## Function: al_calloc
+# 
+#template calloc*(c, n: expr): expr = 
+  #(calloc_with_context((c), (n), __LINE__, __FILE__, __func__))
+
+proc malloc_with_context*(n: csize; line: cint; file: cstring; fun: cstring): pointer
+proc free_with_context*(`ptr`: pointer; line: cint; file: cstring; fun: cstring)
 proc realloc_with_context*(`ptr`: pointer; n: csize; line: cint; file: cstring; 
-                           func: cstring): pointer
+                           fun: cstring): pointer
 proc calloc_with_context*(count: csize; n: csize; line: cint; file: cstring; 
-                          func: cstring): pointer
+                          fun: cstring): pointer
 
 # monitor.h
 proc get_num_video_adapters* : cint
@@ -1224,7 +1225,7 @@ proc destroy_mixer*(M:PMixer)
 proc attach_sample_instance_to_mixer* (stream:PSampleInstance; M:PMixer): bool
 proc attach_audio_stream_to_mixer* (stream:PAudioStream; M:PMixer): bool
 proc attach_mixer_to_mixer* (stream,m:PMixer):bool
-proc set_mixer_postprocess_callback* (M:PMixer; TPostprocessCB; data:pointer): bool
+proc set_mixer_postprocess_callback* (M:PMixer; postProcess:TPostprocessCB; data:pointer): bool
 
 proc get_mixer_frequency*(M:PMixer): cuint
 proc get_mixer_channels* (M:PMixer): TChannelConf
@@ -1503,13 +1504,13 @@ proc get_allegro_ttf_version*:uint32
 
 
 # bitmap
-proc destroy* (B:PBitmap) {.inline.}=
+proc destroy* (b:PBitmap) {.inline.}=
   b.destroyBitmap
-proc get_width* (B:PBitmap):cint {.inline.} =
+proc get_width* (b:PBitmap):cint {.inline.} =
   b.getBitmapWidth
-proc get_height*(B:PBitmap):cint{.inline.}=
+proc get_height*(b:PBitmap):cint{.inline.}=
  b.getBitmapHeight
-proc get_size* (B:PBitmap): tuple[w,h: cint] {.inline.} =
+proc get_size* (b:PBitmap): tuple[w,h: cint] {.inline.} =
   (b.getWidth, b.getHeight)
 
 # display
@@ -1521,16 +1522,16 @@ proc get_width*(D:PDisplay):cint {.inline.} =
   D.get_display_width
 proc get_height*(D:PDisplay):cint {.inline.}=
   D.get_display_height
-proc get_size* (D:PDisplay): tuple[w,h:cint] =
+proc get_size* (d:PDisplay): tuple[w,h:cint] =
   result.w = d.get_display_width
   result.h = d.get_display_height
 
 
 # event queue
-proc destroy* (Q:PEventQueue) {.inline.} =
+proc destroy* (q:PEventQueue) {.inline.} =
   q.destroy_eventqueue
-proc register*(Q:PEventQueue; SRC:PEventSource){.inline.}=
-  Q.registerEventSource(SRC)
+proc register*(q:PEventQueue; src:PEventSource){.inline.}=
+  q.registerEventSource(src)
 
 
 # keyboard
@@ -1559,7 +1560,7 @@ proc eventSource*(T:PTimer):PEventSource{.inline.}=T.getTimerEventSource
 
 # transform
 proc use* (T:PTransform) {.inline.} = T.use_transform
-proc copy*(Dest,Src:PTransform) {.inline.}= dest.copyTransform(src)
+proc copy*(dest,src:PTransform) {.inline.}= dest.copyTransform(src)
 proc identity*(T:PTransform) {.inline.} = T.identityTransform
 proc build*(T:PTransform; x,y,sw,sy,theta:cfloat) {.inline.} = T.buildTransform(x,y,sw,sy,theta)
 proc translate*(T:PTransform; x,y:cfloat){.inline.} = T.translateTransform(x,y)
@@ -1584,11 +1585,11 @@ template al_main* (body:stmt):stmt =
   discard run_main(0, nil, proc(argc:cint; argv:cstringarray):cint{.cdecl.} =
     body
   )
-template al_main* [T] (arg:T; func:proc(arg:T){.nimcall.}): stmt =
+template al_main* [T] (arg:T; fun:proc(arg:T){.nimcall.}): stmt =
   ## Wrap code for al_run_main and pass an argument along
   block:
-    type TBlah = tuple[f: type(func), x: type(arg)]
-    var hax: TBlah = (func,arg)
+    type TBlah = tuple[f: type(fun), x: type(arg)]
+    var hax: TBlah = (fun,arg)
     discard al.run_main(0, cast[cstringarray](hax.addr)) do (argc:cint;argv:cstringarray)->cint{.cdecl.}:
       let hax = cast[ptr TBlah](argv)
       hax.f hax.x
