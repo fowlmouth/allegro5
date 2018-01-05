@@ -56,7 +56,7 @@ const
 
 type TMainFunc* = proc(argc:cint; argv:cstringarray):cint{.cdecl.}
 
-template `<<` (a,b: int{lit}): expr = a shl b
+template `<<` (a,b: int{lit}): untyped = a shl b
 # display.h
 #/* Possible bit combinations for the flags parameter of al_create_display. */
 const
@@ -358,7 +358,7 @@ type
  PEventSource* = ptr TEventSource
 
 import macros, strutils
-macro al_evt (name, srcType): stmt {.immediate.} =
+macro al_evt (name: untyped, srcType: untyped): typed =
   
   let cs = callsite()
   cs.expectKind nnkCommand
@@ -388,7 +388,7 @@ macro al_evt (name, srcType): stmt {.immediate.} =
   result = parseStmt(s.format( 
     $name, fields))
   when defined(debug):
-    echo repr (result)
+    echo repr(result)
 
 al_evt Any, PEventSource
 al_evt Display, PDisplay, tuple[x,y,width,height,orientation: cint] 

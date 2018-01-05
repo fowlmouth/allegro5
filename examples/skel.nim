@@ -1,4 +1,4 @@
-import al
+import allegro
 
 al_main:
   if not al.init():
