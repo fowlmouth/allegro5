@@ -1,4 +1,4 @@
-import al,basic2d
+import allegro,basic2d
 
 type
   PCamera* = ref TCamera
